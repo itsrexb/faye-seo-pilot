@@ -98,10 +98,10 @@ final class Plugin {
 			);
 
 			wp_localize_script( 'seopilot-admin', 'SeoPilot', [
-				'ajax_url'               => admin_url( 'admin-ajax.php' ),
-				'nonce'                  => wp_create_nonce( 'seopilot_nonce' ),
-				'default_system_prompt'  => RequestFactory::get_default_system_prompt(),
-				'strings'  => [
+				'ajax_url'              => admin_url( 'admin-ajax.php' ),
+				'nonce'                 => wp_create_nonce( 'seopilot_nonce' ),
+				'default_system_prompt' => RequestFactory::get_default_system_prompt(),
+				'strings'               => [
 					'auditing'      => __( 'Auditing…', 'seo-pilot-pro' ),
 					'audit_done'    => __( 'Audit complete. Redirecting to review…', 'seo-pilot-pro' ),
 					'audit_failed'  => __( 'Audit failed: ', 'seo-pilot-pro' ),
@@ -168,7 +168,7 @@ final class Plugin {
 		}
 
 		$job_id    = absint( $_POST['job_id'] ?? 0 );
-		$approvals = isset( $_POST['approvals'] ) ? wp_unslash( $_POST['approvals'] ) : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-field in the switch below
+		$approvals = isset( $_POST['approvals'] ) ? wp_unslash( $_POST['approvals'] ) : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-field below
 
 		if ( ! $job_id || ! is_array( $approvals ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'seo-pilot-pro' ) ] );
@@ -190,11 +190,24 @@ final class Plugin {
 		// Create rollback snapshot before applying.
 		$rollback->create_snapshot( $post_id, $job_id );
 
+		// Collect all Elementor element updates first — apply in a single
+		// read-modify-write pass to avoid WordPress meta cache stomping.
+		$elementor_updates = [];
+
 		$post_data = [];
 		foreach ( $approvals as $field => $value ) {
-			$field = sanitize_key( $field );
-			$value = wp_kses_post( (string) $value );
+			$field     = sanitize_key( $field );
+			$value_str = (string) $value;
 
+			// ── Elementor per-element fields: elementor_{element_id} ──────────
+			if ( str_starts_with( $field, 'elementor_' ) ) {
+				$element_id = substr( $field, strlen( 'elementor_' ) );
+				$prop_repo->set_approved( $job_id, $field, wp_kses_post( $value_str ) );
+				$elementor_updates[ $element_id ] = $value_str;
+				continue;
+			}
+
+			$value = wp_kses_post( $value_str );
 			$prop_repo->set_approved( $job_id, $field, $value );
 
 			switch ( $field ) {
@@ -205,9 +218,7 @@ final class Plugin {
 					$post_data['post_excerpt'] = wp_strip_all_tags( $value );
 					break;
 				case 'post_content':
-					if ( $this->is_elementor_post( $post_id ) ) {
-						$this->apply_elementor_content( $post_id, $value );
-					}
+					// Classic / block-editor posts only (Elementor posts use elementor_* fields).
 					$post_data['post_content'] = $value;
 					break;
 				case 'post_categories':
@@ -222,6 +233,11 @@ final class Plugin {
 					// SEO meta fields handled by adapter below.
 					break;
 			}
+		}
+
+		// Apply all Elementor elements in one read-modify-write pass.
+		if ( ! empty( $elementor_updates ) ) {
+			$this->apply_elementor_elements_batch( $post_id, $elementor_updates );
 		}
 
 		if ( ! empty( $post_data ) ) {
@@ -288,19 +304,21 @@ final class Plugin {
 		wp_send_json_success( [ 'message' => __( 'Rollback complete.', 'seo-pilot-pro' ) ] );
 	}
 
-	/**
-	 * Check whether a post is built with Elementor.
-	 */
-	private function is_elementor_post( int $post_id ): bool {
-		$data = get_post_meta( $post_id, '_elementor_data', true );
-		return ! empty( $data ) && '[]' !== $data;
-	}
+	// -------------------------------------------------------------------------
+	// Elementor per-element apply
+	// -------------------------------------------------------------------------
 
 	/**
-	 * Write new HTML into the first text-editor widget of an Elementor page.
-	 * Also clears all Elementor caches for the post so the frontend reflects the change.
+	 * Apply multiple Elementor element updates in a single read-modify-write pass.
+	 *
+	 * Reading and writing _elementor_data once prevents WordPress meta-cache
+	 * stomping: if we called update_post_meta per element, each subsequent
+	 * read would get the stale cached value and overwrite the previous update.
+	 *
+	 * @param int                  $post_id WordPress post ID.
+	 * @param array<string,string> $updates Map of element_id => new value.
 	 */
-	private function apply_elementor_content( int $post_id, string $html ): void {
+	private function apply_elementor_elements_batch( int $post_id, array $updates ): void {
 		$raw  = get_post_meta( $post_id, '_elementor_data', true );
 		$data = json_decode( $raw, true );
 
@@ -308,79 +326,132 @@ final class Plugin {
 			return;
 		}
 
-		$replaced = false;
-		$this->replace_elementor_text_widget( $data, $html, $replaced );
+		$any_updated = false;
+		foreach ( $updates as $element_id => $value ) {
+			$updated = false;
+			$this->update_element_by_id( $data, (string) $element_id, (string) $value, $updated );
+			if ( $updated ) {
+				$any_updated = true;
+			}
+		}
 
-		if ( $replaced ) {
+		if ( $any_updated ) {
 			update_post_meta( $post_id, '_elementor_data', wp_slash( wp_json_encode( $data ) ) );
 			$this->flush_elementor_cache( $post_id );
 		}
 	}
 
 	/**
-	 * Clear all Elementor caches for a post so the frontend immediately reflects changes.
+	 * Recursively walk Elementor elements, find the one with $target_id,
+	 * and update its content field based on widget type.
 	 *
-	 * Priority order:
-	 *  1. Elementor's own CSS\Post file object (deletes the .css file and the meta).
-	 *  2. Direct file deletion as a fallback when the class is not loaded.
-	 *  3. Elementor's global data-regeneration flag so it rebuilds on next request.
+	 * @param array  $elements  Elementor elements array, passed by reference.
+	 * @param string $target_id The element ID to find.
+	 * @param string $value     New content value.
+	 * @param bool   $updated   Set to true once an update is made.
+	 */
+	private function update_element_by_id( array &$elements, string $target_id, string $value, bool &$updated ): void {
+		foreach ( $elements as &$element ) {
+			if ( $updated ) {
+				break;
+			}
+
+			if ( ( $element['id'] ?? '' ) === $target_id ) {
+				$widget = $element['widgetType'] ?? '';
+
+				switch ( $widget ) {
+					case 'text-editor':
+						$element['settings']['editor'] = wp_kses_post( $value );
+						$updated = true;
+						break;
+
+					case 'heading':
+						$element['settings']['title'] = sanitize_text_field( wp_strip_all_tags( $value ) );
+						$updated = true;
+						break;
+
+					case 'html':
+						$element['settings']['html'] = wp_kses_post( $value );
+						$updated = true;
+						break;
+
+					case 'text':
+						$element['settings']['text'] = sanitize_text_field( wp_strip_all_tags( $value ) );
+						$updated = true;
+						break;
+
+					case 'button':
+						// Preserve button URL — only update label text.
+						$element['settings']['text'] = sanitize_text_field( wp_strip_all_tags( $value ) );
+						$updated = true;
+						break;
+
+					case 'accordion':
+					case 'toggle':
+						$items = json_decode( $value, true );
+						if ( is_array( $items ) ) {
+							$tabs = [];
+							foreach ( $items as $i => $item ) {
+								$tabs[] = [
+									'_id'         => 'faq' . $i,
+									'tab_title'   => sanitize_text_field( $item['question'] ?? '' ),
+									'tab_content' => wp_kses_post( $item['answer'] ?? '' ),
+								];
+							}
+							$element['settings']['tabs'] = $tabs;
+							$updated = true;
+						}
+						break;
+
+					case 'eael-faq':
+					case 'eael-accordion':
+						$items = json_decode( $value, true );
+						if ( is_array( $items ) ) {
+							$faq_items = [];
+							foreach ( $items as $i => $item ) {
+								$faq_items[] = [
+									'_id'              => 'faq' . $i,
+									'eael_faq_title'   => sanitize_text_field( $item['question'] ?? '' ),
+									'eael_faq_content' => wp_kses_post( $item['answer'] ?? '' ),
+								];
+							}
+							$element['settings']['eael_faq_items'] = $faq_items;
+							$updated = true;
+						}
+						break;
+				}
+				break; // Element found — stop searching regardless of whether we updated.
+			}
+
+			if ( ! empty( $element['elements'] ) && is_array( $element['elements'] ) ) {
+				$this->update_element_by_id( $element['elements'], $target_id, $value, $updated );
+			}
+		}
+		unset( $element );
+	}
+
+	// -------------------------------------------------------------------------
+	// Elementor cache helpers
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Clear all Elementor caches for a post so the frontend reflects changes immediately.
 	 */
 	private function flush_elementor_cache( int $post_id ): void {
-		// 1. Clear the element cache — Elementor Pro caches rendered widget HTML here.
-		//    Without this, the frontend serves stale HTML even after _elementor_data changes.
 		delete_post_meta( $post_id, '_elementor_element_cache' );
-
-		// 2. Clear page-level asset cache.
 		delete_post_meta( $post_id, '_elementor_page_assets' );
 
-		// 3. Use Elementor's own CSS file API when available — deletes the .css file and its meta.
 		if ( class_exists( '\Elementor\Core\Files\CSS\Post' ) ) {
 			$css = new \Elementor\Core\Files\CSS\Post( (string) $post_id );
 			$css->delete();
 		} else {
-			// Fallback: remove the meta flag and the physical file on disk.
 			delete_post_meta( $post_id, '_elementor_css' );
-
 			$upload = wp_upload_dir();
 			$file   = $upload['basedir'] . '/elementor/css/post-' . $post_id . '.css';
 			if ( file_exists( $file ) ) {
 				wp_delete_file( $file );
 			}
 		}
-	}
-
-	/**
-	 * Recursively walk Elementor elements and replace the first text-editor or html
-	 * widget's content field with the supplied HTML.
-	 *
-	 * @param array  $elements Elements array passed by reference.
-	 * @param string $html     New HTML content.
-	 * @param bool   $replaced Flag set to true once a replacement is made.
-	 */
-	private function replace_elementor_text_widget( array &$elements, string $html, bool &$replaced ): void {
-		foreach ( $elements as &$element ) {
-			if ( $replaced ) {
-				break;
-			}
-
-			if ( isset( $element['widgetType'] ) ) {
-				if ( 'text-editor' === $element['widgetType'] ) {
-					$element['settings']['editor'] = $html;
-					$replaced = true;
-					break;
-				}
-				if ( 'html' === $element['widgetType'] ) {
-					$element['settings']['html'] = $html;
-					$replaced = true;
-					break;
-				}
-			}
-
-			if ( ! empty( $element['elements'] ) && is_array( $element['elements'] ) ) {
-				$this->replace_elementor_text_widget( $element['elements'], $html, $replaced );
-			}
-		}
-		unset( $element );
 	}
 
 	private function resolve_seo_adapter(): \SeoPilotPro\Integrations\SeoAdapterInterface {

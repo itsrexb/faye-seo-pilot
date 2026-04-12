@@ -33,7 +33,7 @@ final class RollbackManager {
 		$categories = wp_get_post_categories( $post_id, [ 'fields' => 'names' ] );
 		$tags       = wp_get_post_tags( $post_id, [ 'fields' => 'names' ] );
 
-		$elementor_data = wp_unslash( get_post_meta( $post_id, '_elementor_data', true ) );
+		$elementor_data = get_post_meta( $post_id, '_elementor_data', true );
 
 		$snapshot = [
 			'post_title'       => $post->post_title,

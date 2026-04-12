@@ -136,20 +136,32 @@
 
 	// Accept field
 	$( document ).on( 'click', '.seopilot-accept-btn', function () {
-		const field  = $( this ).data( 'field' );
-		const $card  = $( this ).closest( '.seopilot-field-card' );
+		const field     = $( this ).data( 'field' );
+		const $card     = $( this ).closest( '.seopilot-field-card' );
 		const $editable = $card.find( '.seopilot-content-box--edit[data-field="' + field + '"]' );
-		const value  = $editable.is( '[data-field="post_content"]' )
-			? $editable.html()
-			: $editable.text().trim();
+		const $hidden   = $card.find( '.seopilot-field-value[name="approvals[' + field + ']"]' );
+
+		let value;
+		if ( $editable.length ) {
+			// Text/HTML contenteditable field — use html() for HTML fields, text() for plain
+			value = $editable.data( 'html' ) === 1
+				? $editable.html()
+				: $editable.text().trim();
+		} else {
+			// Accordion/JSON fields: no contenteditable — read the pre-filled hidden input
+			value = $hidden.val();
+		}
 
 		approved[ field ] = value;
 		$card
 			.removeClass( 'seopilot-field-card--rejected seopilot-field-card--pending' )
 			.addClass( 'seopilot-field-card--approved' );
 
-		// Update hidden input
-		$card.find( '.seopilot-field-value[name="approvals[' + field + ']"]' ).val( value );
+		// Hide both action buttons once a decision is made
+		$card.find( '.seopilot-field-actions' ).hide();
+
+		// Sync hidden input
+		$hidden.val( value );
 	} );
 
 	// Reject field
@@ -161,6 +173,9 @@
 		$card
 			.removeClass( 'seopilot-field-card--approved seopilot-field-card--pending' )
 			.addClass( 'seopilot-field-card--rejected' );
+
+		// Hide both action buttons once a decision is made
+		$card.find( '.seopilot-field-actions' ).hide();
 
 		$card.find( '.seopilot-field-value' ).val( '' );
 	} );

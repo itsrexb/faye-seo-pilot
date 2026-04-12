@@ -160,12 +160,32 @@ final class ReviewPage {
 
 				<?php foreach ( $proposals as $proposal ) : ?>
 					<?php
-					$field   = $proposal->field_name;
-					$label   = $field_labels[ $field ] ?? $field;
-					$orig    = (string) $proposal->original_value;
-					$sugg    = (string) $proposal->suggested_value;
+					$field = $proposal->field_name;
+					$orig  = (string) $proposal->original_value;
+					$sugg  = (string) $proposal->suggested_value;
+
+					// Resolve label: static map → Elementor element → fallback.
+					if ( isset( $field_labels[ $field ] ) ) {
+						$label = $field_labels[ $field ];
+					} elseif ( str_starts_with( $field, 'elementor_' ) ) {
+						// Detect accordion/FAQ by checking if the value is a JSON array of Q&A.
+						$decoded = json_decode( $orig, true );
+						if ( is_array( $decoded ) && isset( $decoded[0]['question'] ) ) {
+							$label = __( 'Accordion / FAQ Block', 'seo-pilot-pro' );
+						} else {
+							$label = __( 'Content Block', 'seo-pilot-pro' );
+						}
+					} else {
+						$label = $field;
+					}
+
 					$status  = $proposal->approval_status;
-					$is_html = $field === 'post_content';
+					// Render as HTML for post_content and Elementor text/html elements.
+					// JSON (accordion) fields render as a Q&A list — not editable inline.
+					$is_elementor = str_starts_with( $field, 'elementor_' );
+					$orig_decoded = $is_elementor ? json_decode( $orig, true ) : null;
+					$is_json      = is_array( $orig_decoded ) && isset( $orig_decoded[0]['question'] );
+					$is_html      = $field === 'post_content' || ( $is_elementor && ! $is_json );
 					?>
 					<div class="seopilot-field-card seopilot-field-card--<?php echo esc_attr( $status ); ?>" data-field="<?php echo esc_attr( $field ); ?>">
 						<div class="seopilot-field-header">
@@ -183,13 +203,46 @@ final class ReviewPage {
 						<div class="seopilot-field-body">
 							<div class="seopilot-col seopilot-col--current">
 								<h4><?php esc_html_e( 'Current', 'seo-pilot-pro' ); ?></h4>
-								<div class="seopilot-content-box"><?php if ( $is_html ) : ?><?php echo wp_kses_post( $orig ); ?><?php else : ?><?php echo esc_html( $orig ?: __( '(empty)', 'seo-pilot-pro' ) ); ?><?php endif; ?></div>
+								<div class="seopilot-content-box">
+									<?php
+									if ( $is_json ) {
+										if ( is_array( $orig_decoded ) ) {
+											foreach ( $orig_decoded as $qa ) {
+												echo '<p><strong>' . esc_html( $qa['question'] ?? '' ) . '</strong><br>' . esc_html( $qa['answer'] ?? '' ) . '</p>';
+											}
+										} else {
+											echo esc_html( $orig ?: __( '(empty)', 'seo-pilot-pro' ) );
+										}
+									} elseif ( $is_html ) {
+										echo wp_kses_post( $orig );
+									} else {
+										echo esc_html( $orig ?: __( '(empty)', 'seo-pilot-pro' ) );
+									}
+									?>
+								</div>
 							</div>
 
 							<div class="seopilot-col seopilot-col--suggested">
 								<h4><?php esc_html_e( 'Suggested', 'seo-pilot-pro' ); ?></h4>
-								<div class="seopilot-content-box seopilot-content-box--edit" contenteditable="true" data-field="<?php echo esc_attr( $field ); ?>"><?php if ( $is_html ) : ?><?php echo wp_kses_post( $sugg ); ?><?php else : ?><?php echo esc_html( $sugg ); ?><?php endif; ?></div>
-								<input type="hidden" class="seopilot-field-value" name="approvals[<?php echo esc_attr( $field ); ?>]" value="" />
+								<?php if ( $is_json ) : ?>
+									<?php
+									$sugg_items = json_decode( $sugg, true );
+									?>
+									<div class="seopilot-content-box">
+										<?php if ( is_array( $sugg_items ) ) : ?>
+											<?php foreach ( $sugg_items as $qa ) : ?>
+												<p><strong><?php echo esc_html( $qa['question'] ?? '' ); ?></strong><br><?php echo esc_html( $qa['answer'] ?? '' ); ?></p>
+											<?php endforeach; ?>
+										<?php else : ?>
+											<?php echo esc_html( $sugg ); ?>
+										<?php endif; ?>
+									</div>
+									<?php /* Store original JSON as hidden value — accordion items are not inline-editable */ ?>
+									<input type="hidden" class="seopilot-field-value" name="approvals[<?php echo esc_attr( $field ); ?>]" value="<?php echo esc_attr( $sugg ); ?>" />
+								<?php else : ?>
+									<div class="seopilot-content-box seopilot-content-box--edit" contenteditable="true" data-field="<?php echo esc_attr( $field ); ?>" data-html="<?php echo $is_html ? '1' : '0'; ?>"><?php if ( $is_html ) : ?><?php echo wp_kses_post( $sugg ); ?><?php else : ?><?php echo esc_html( $sugg ); ?><?php endif; ?></div>
+									<input type="hidden" class="seopilot-field-value" name="approvals[<?php echo esc_attr( $field ); ?>]" value="" />
+								<?php endif; ?>
 							</div>
 						</div>
 					</div>

@@ -19,7 +19,7 @@ final class ClaudeClient implements AiClientInterface {
 
 	private const API_URL     = 'https://api.anthropic.com/v1/messages';
 	private const API_VERSION = '2023-06-01';
-	private const TIMEOUT     = 60;
+	private const TIMEOUT     = 120;
 
 	private string $api_key;
 	private string $model;

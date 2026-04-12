@@ -22,7 +22,8 @@ final class ResponseParser {
 		'suggested_title',
 		'suggested_meta_description',
 		'suggested_excerpt',
-		'enhanced_content_html',
+		// enhanced_content_html is required for classic posts; elementor_elements for Elementor posts.
+		// ProposalGenerator decides which is present — do not validate here.
 	];
 
 	/**

@@ -2,6 +2,11 @@
 /**
  * Extracts post content and metadata for auditing.
  *
+ * For Elementor pages the content is extracted as an array of individual
+ * widget elements (each with its own Elementor element ID), so that the AI
+ * can improve each widget in isolation and the result can be written back to
+ * the exact element — no cross-widget content mixing.
+ *
  * @package SeoPilotPro
  */
 
@@ -36,143 +41,201 @@ final class ContentExtractor {
 			return new \WP_Error( 'seopilot_invalid_status', __( 'Post status is not auditable.', 'seo-pilot-pro' ) );
 		}
 
-		$settings      = get_option( 'seopilot_settings', [] );
-		$brand_voice   = sanitize_text_field( $settings['brand_voice'] ?? '' );
-		$tone          = sanitize_text_field( $settings['tone'] ?? 'professional' );
+		$settings    = get_option( 'seopilot_settings', [] );
+		$brand_voice = sanitize_text_field( $settings['brand_voice'] ?? '' );
+		$tone        = sanitize_text_field( $settings['tone'] ?? 'professional' );
 
-		$content    = $this->get_content( $post );
-		$word_count = str_word_count( wp_strip_all_tags( $content ) );
+		// --- Elementor: extract per-element content (preserves element IDs) ---
+		$elementor_elements = [];
+		$elementor_raw      = get_post_meta( $post_id, '_elementor_data', true );
+		if ( ! empty( $elementor_raw ) && '[]' !== $elementor_raw ) {
+			$tree = json_decode( $elementor_raw, true );
+			if ( is_array( $tree ) ) {
+				$this->collect_elementor_elements( $tree, $elementor_elements );
+			}
+		}
 
-		$categories = wp_get_post_categories( $post_id, [ 'fields' => 'names' ] );
-		$tags       = wp_get_post_tags( $post_id, [ 'fields' => 'names' ] );
+		// Build flat text for word count (from elements when available, else post_content).
+		$flat_content = $this->build_flat_content( $post, $elementor_elements );
+		$word_count   = str_word_count( wp_strip_all_tags( $flat_content ) );
 
+		$categories     = wp_get_post_categories( $post_id, [ 'fields' => 'names' ] );
+		$tags           = wp_get_post_tags( $post_id, [ 'fields' => 'names' ] );
 		$all_categories = get_terms( [ 'taxonomy' => 'category', 'hide_empty' => false, 'fields' => 'names' ] );
 
 		$plugin_locale = sanitize_text_field( $settings['locale'] ?? 'de' );
 		[ 'code' => $lang_code, 'locale' => $lang_locale, 'source' => $lang_source ] = $this->detect_language( $post_id, $plugin_locale );
 
 		return [
-			'post_id'          => $post_id,
-			'post_type'        => $post->post_type,
-			'post_title'       => $post->post_title,
-			'post_content'     => $content,
-			'post_excerpt'     => $post->post_excerpt,
-			'post_name'        => $post->post_name,
-			'post_url'         => (string) get_permalink( $post_id ),
-			'seo_title'        => $this->seo_adapter->get_seo_title( $post_id ),
-			'meta_description' => $this->seo_adapter->get_meta_description( $post_id ),
-			'language'         => $lang_code,
-			'language_locale'  => $lang_locale,
-			'language_source'  => $lang_source,
-			'categories'       => is_array( $categories ) ? $categories : [],
-			'tags'             => is_array( $tags ) ? $tags : [],
-			'word_count'       => $word_count,
-			'tone_settings'    => "Brand voice: {$brand_voice}. Tone: {$tone}.",
-			'site_pages'       => $this->get_site_pages( $post_id ),
-			'site_categories'  => is_array( $all_categories ) ? $all_categories : [],
+			'post_id'            => $post_id,
+			'post_type'          => $post->post_type,
+			'post_title'         => $post->post_title,
+			'post_content'       => $flat_content,   // flat text for word count / non-Elementor
+			'post_excerpt'       => $post->post_excerpt,
+			'post_name'          => $post->post_name,
+			'post_url'           => (string) get_permalink( $post_id ),
+			'seo_title'          => $this->seo_adapter->get_seo_title( $post_id ),
+			'meta_description'   => $this->seo_adapter->get_meta_description( $post_id ),
+			'language'           => $lang_code,
+			'language_locale'    => $lang_locale,
+			'language_source'    => $lang_source,
+			'categories'         => is_array( $categories ) ? $categories : [],
+			'tags'               => is_array( $tags ) ? $tags : [],
+			'word_count'         => $word_count,
+			'tone_settings'      => "Brand voice: {$brand_voice}. Tone: {$tone}.",
+			'site_pages'         => $this->get_site_pages( $post_id ),
+			'site_categories'    => is_array( $all_categories ) ? $all_categories : [],
+			'elementor_elements' => $elementor_elements,  // empty array for non-Elementor posts
 		];
 	}
 
-	/**
-	 * Return the renderable content for a post.
-	 * For Elementor pages, reconstruct HTML from the widget tree stored in _elementor_data.
-	 * Falls back to post_content for classic/block-editor posts.
-	 */
-	private function get_content( \WP_Post $post ): string {
-		$elementor_data = get_post_meta( $post->ID, '_elementor_data', true );
-
-		if ( empty( $elementor_data ) || '[]' === $elementor_data ) {
-			return $post->post_content;
-		}
-
-		$elements = json_decode( wp_unslash( $elementor_data ), true );
-		if ( ! is_array( $elements ) ) {
-			return $post->post_content;
-		}
-
-		$html = '';
-		$this->walk_elementor_elements( $elements, $html );
-
-		return $html !== '' ? $html : $post->post_content;
-	}
+	// -------------------------------------------------------------------------
+	// Elementor per-element extraction
+	// -------------------------------------------------------------------------
 
 	/**
-	 * Recursively walk Elementor elements and reconstruct HTML from widget content fields.
+	 * Walk the Elementor element tree and collect every editable widget as a
+	 * structured entry keyed by its Elementor element ID.
 	 *
-	 * @param array  $elements Elementor elements array.
-	 * @param string $html     Accumulated HTML, passed by reference.
+	 * Supported widget types and what we extract:
+	 *   text-editor  → content (HTML)
+	 *   heading      → content (plain text) + tag (h2/h3/…)
+	 *   html         → content (HTML)
+	 *   text         → content (plain text)
+	 *   button       → content (button label) + url
+	 *   accordion / toggle → items (array of {question, answer})
+	 *   eael-faq / eael-accordion → items (array of {question, answer})
+	 *
+	 * @param array $tree   Elementor elements array (top level or nested).
+	 * @param array $result Accumulated element list, passed by reference.
 	 */
-	private function walk_elementor_elements( array $elements, string &$html ): void {
-		foreach ( $elements as $element ) {
-			$type       = $element['elType']    ?? '';
-			$widget     = $element['widgetType'] ?? '';
-			$settings   = $element['settings']  ?? [];
+	private function collect_elementor_elements( array $tree, array &$result ): void {
+		foreach ( $tree as $element ) {
+			$el_type  = $element['elType']     ?? '';
+			$widget   = $element['widgetType'] ?? '';
+			$id       = $element['id']         ?? '';
+			$settings = $element['settings']   ?? [];
 
-			if ( $type === 'widget' ) {
+			if ( 'widget' === $el_type && $id ) {
+				$entry = null;
+
 				switch ( $widget ) {
-					case 'heading':
-						$tag  = sanitize_key( $settings['header_size'] ?? 'h2' );
-						$text = wp_kses_post( $settings['title'] ?? '' );
-						if ( $text ) {
-							$html .= "<{$tag}>{$text}</{$tag}>\n";
+					case 'text-editor':
+						$content = $settings['editor'] ?? '';
+						if ( trim( wp_strip_all_tags( $content ) ) ) {
+							$entry = [ 'id' => $id, 'type' => 'text-editor', 'content' => $content ];
 						}
 						break;
 
-					case 'text-editor':
-						$content = $settings['editor'] ?? '';
-						if ( $content ) {
-							$html .= $content . "\n";
+					case 'heading':
+						$text = wp_strip_all_tags( $settings['title'] ?? '' );
+						if ( trim( $text ) ) {
+							$entry = [
+								'id'      => $id,
+								'type'    => 'heading',
+								'tag'     => sanitize_key( $settings['header_size'] ?? 'h2' ),
+								'content' => $text,
+							];
 						}
 						break;
 
 					case 'html':
 						$content = $settings['html'] ?? '';
-						if ( $content ) {
-							$html .= $content . "\n";
+						if ( trim( wp_strip_all_tags( $content ) ) ) {
+							$entry = [ 'id' => $id, 'type' => 'html', 'content' => $content ];
 						}
 						break;
 
 					case 'text':
-						$content = $settings['text'] ?? '';
-						if ( $content ) {
-							$html .= '<p>' . wp_kses_post( $content ) . "</p>\n";
+						$content = wp_strip_all_tags( $settings['text'] ?? '' );
+						if ( trim( $content ) ) {
+							$entry = [ 'id' => $id, 'type' => 'text', 'content' => $content ];
 						}
 						break;
 
 					case 'button':
-						$btn_text = $settings['text'] ?? '';
-						$btn_url  = $settings['link']['url'] ?? '#';
+						$btn_text = wp_strip_all_tags( $settings['text'] ?? '' );
 						if ( $btn_text ) {
-							$html .= '<p><a href="' . esc_url( $btn_url ) . '">' . esc_html( $btn_text ) . "</a></p>\n";
+							$entry = [
+								'id'      => $id,
+								'type'    => 'button',
+								'content' => $btn_text,
+								'url'     => $settings['link']['url'] ?? '',
+							];
 						}
 						break;
 
 					case 'accordion':
 					case 'toggle':
-						$items = $settings['tabs'] ?? [];
-						foreach ( $items as $item ) {
-							$q = $item['tab_title']   ?? '';
-							$a = $item['tab_content'] ?? '';
+						$items = [];
+						foreach ( $settings['tabs'] ?? [] as $tab ) {
+							$q = wp_strip_all_tags( $tab['tab_title']   ?? '' );
+							$a = wp_strip_all_tags( $tab['tab_content'] ?? '' );
 							if ( $q ) {
-								$html .= '<h3>' . esc_html( $q ) . "</h3>\n";
-							}
-							if ( $a ) {
-								$html .= '<p>' . wp_kses_post( $a ) . "</p>\n";
+								$items[] = [ 'question' => $q, 'answer' => $a ];
 							}
 						}
+						if ( $items ) {
+							$entry = [ 'id' => $id, 'type' => $widget, 'items' => $items ];
+						}
 						break;
+
+					case 'eael-faq':
+					case 'eael-accordion':
+						$items = [];
+						foreach ( $settings['eael_faq_items'] ?? [] as $item ) {
+							$q = wp_strip_all_tags( $item['eael_faq_title']   ?? '' );
+							$a = wp_strip_all_tags( $item['eael_faq_content'] ?? '' );
+							if ( $q ) {
+								$items[] = [ 'question' => $q, 'answer' => $a ];
+							}
+						}
+						if ( $items ) {
+							$entry = [ 'id' => $id, 'type' => $widget, 'items' => $items ];
+						}
+						break;
+				}
+
+				if ( null !== $entry ) {
+					$result[] = $entry;
 				}
 			}
 
 			if ( ! empty( $element['elements'] ) && is_array( $element['elements'] ) ) {
-				$this->walk_elementor_elements( $element['elements'], $html );
+				$this->collect_elementor_elements( $element['elements'], $result );
 			}
 		}
 	}
 
 	/**
+	 * Build a flat text blob for word-count purposes.
+	 * For Elementor posts, concatenates all element content/items.
+	 * For classic posts, returns post_content.
+	 */
+	private function build_flat_content( \WP_Post $post, array $elementor_elements ): string {
+		if ( empty( $elementor_elements ) ) {
+			return $post->post_content;
+		}
+
+		$parts = [];
+		foreach ( $elementor_elements as $el ) {
+			if ( isset( $el['content'] ) ) {
+				$parts[] = $el['content'];
+			} elseif ( isset( $el['items'] ) ) {
+				foreach ( $el['items'] as $item ) {
+					$parts[] = $item['question'] . ' ' . $item['answer'];
+				}
+			}
+		}
+		return implode( "\n", $parts );
+	}
+
+	// -------------------------------------------------------------------------
+	// Internal helpers
+	// -------------------------------------------------------------------------
+
+	/**
 	 * Fetch published posts and pages for internal linking context.
-	 * Returns up to 50 entries sorted by last-modified, excluding the current post.
 	 *
 	 * @param int $exclude_post_id The post being audited (exclude from the list).
 	 * @return array<array{title:string,url:string,type:string}>
@@ -200,14 +263,12 @@ final class ContentExtractor {
 				'type'  => (string) get_post_type( $id ),
 			];
 		}
-
 		return $pages;
 	}
 
 	/**
 	 * Detect the post language via Polylang, or fall back to the plugin locale setting.
 	 *
-	 * @param string $plugin_locale The locale configured in the plugin settings (e.g. "de").
 	 * @return array{code: string, locale: string, source: string}
 	 */
 	private function detect_language( int $post_id, string $plugin_locale ): array {
@@ -223,7 +284,6 @@ final class ContentExtractor {
 			}
 		}
 
-		// Polylang not active — use the locale from plugin settings.
 		return [
 			'code'   => $plugin_locale,
 			'locale' => $plugin_locale,

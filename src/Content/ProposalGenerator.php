@@ -56,8 +56,8 @@ final class ProposalGenerator {
 		$system_prompt = $this->request_factory->build_system_prompt( $settings );
 		$user_message  = $this->request_factory->build_user_message( $post_data );
 
-		// Call Claude.
-		$response = $this->client->send( $system_prompt, $user_message, 4096 );
+		// Call AI.
+		$response = $this->client->send( $system_prompt, $user_message, 8192 );
 
 		if ( is_wp_error( $response ) ) {
 			$this->job_repo->update_status( $job_id, 'failed' );
@@ -70,17 +70,22 @@ final class ProposalGenerator {
 
 		if ( is_wp_error( $proposal ) ) {
 			$this->job_repo->update_status( $job_id, 'failed' );
-			$this->log_repo->add( $job_id, 'error', $proposal->get_error_message(), [ 'raw' => substr( $response['text'], 0, 500 ) ] );
+			$raw  = $response['text'];
+			$tail = strlen( $raw ) > 300 ? '…' . substr( $raw, -300 ) : $raw;
+			$this->log_repo->add( $job_id, 'error', $proposal->get_error_message(), [
+				'raw_start' => substr( $raw, 0, 200 ),
+				'raw_end'   => $tail,
+				'raw_len'   => strlen( $raw ),
+			] );
 			return $proposal;
 		}
 
-		// Store proposals per field.
+		// ── Non-content fields (same for all post types) ─────────────────────
 		$field_map = [
-			'post_title'       => [ 'original' => $post_data['post_title'],    'suggested' => $proposal['suggested_title'] ],
-			'post_excerpt'     => [ 'original' => $post_data['post_excerpt'],   'suggested' => $proposal['suggested_excerpt'] ],
-			'post_content'     => [ 'original' => $post_data['post_content'],   'suggested' => $proposal['enhanced_content_html'] ],
-			'seo_title'        => [ 'original' => $post_data['seo_title'],      'suggested' => $proposal['suggested_title'] ],
-			'meta_description' => [ 'original' => $post_data['meta_description'], 'suggested' => $proposal['suggested_meta_description'] ],
+			'post_title'       => [ 'original' => $post_data['post_title'],       'suggested' => $proposal['suggested_title'] ],
+			'post_excerpt'     => [ 'original' => $post_data['post_excerpt'],      'suggested' => $proposal['suggested_excerpt'] ],
+			'seo_title'        => [ 'original' => $post_data['seo_title'],         'suggested' => $proposal['suggested_title'] ],
+			'meta_description' => [ 'original' => $post_data['meta_description'],  'suggested' => $proposal['suggested_meta_description'] ],
 			'post_categories'  => [
 				'original'  => implode( ', ', (array) ( $post_data['categories'] ?? [] ) ),
 				'suggested' => implode( ', ', (array) ( $proposal['suggested_categories'] ?? [] ) ),
@@ -95,12 +100,61 @@ final class ProposalGenerator {
 			$this->proposal_repo->insert( $job_id, $field, (string) $values['original'], (string) $values['suggested'] );
 		}
 
-		// Store issues and notes as a log entry.
-		$issues         = implode( ' | ', (array) ( $proposal['issues'] ?? [] ) );
-		$notes          = implode( ' | ', (array) ( $proposal['review_notes'] ?? [] ) );
-		$enhanced_words = str_word_count( wp_strip_all_tags( (string) ( $proposal['enhanced_content_html'] ?? '' ) ) );
-		$links_inserted = count( (array) ( $proposal['internal_links_inserted'] ?? [] ) );
-		$ctas_detected  = count( (array) ( $proposal['detected_ctas'] ?? [] ) );
+		// ── Content proposals ─────────────────────────────────────────────────
+		$elementor_elements  = $post_data['elementor_elements']  ?? [];
+		$response_elements   = $proposal['elementor_elements']   ?? [];
+		$enhanced_words      = 0;
+		$links_inserted      = count( (array) ( $proposal['internal_links_inserted'] ?? [] ) );
+		$ctas_detected       = count( (array) ( $proposal['detected_ctas'] ?? [] ) );
+
+		if ( ! empty( $elementor_elements ) && ! empty( $response_elements ) ) {
+			// Elementor post: create one proposal per widget element.
+			$original_map = array_column( $elementor_elements, null, 'id' );
+
+			foreach ( $response_elements as $el ) {
+				$id = $el['id'] ?? '';
+				if ( ! $id || ! isset( $original_map[ $id ] ) ) {
+					continue;
+				}
+				$orig = $original_map[ $id ];
+
+				// Store content or items as the proposal values.
+				if ( isset( $el['items'] ) ) {
+					$orig_val = (string) wp_json_encode( $orig['items'] ?? [] );
+					$sugg_val = (string) wp_json_encode( $el['items'] );
+				} else {
+					$orig_val = (string) ( $orig['content'] ?? '' );
+					$sugg_val = (string) ( $el['content'] ?? '' );
+					$enhanced_words += str_word_count( wp_strip_all_tags( $sugg_val ) );
+				}
+
+				$this->proposal_repo->insert( $job_id, 'elementor_' . $id, $orig_val, $sugg_val );
+			}
+		} elseif ( ! empty( $elementor_elements ) && ! empty( $proposal['enhanced_content_html'] ) ) {
+			// Elementor post but AI returned enhanced_content_html (fallback).
+			$this->proposal_repo->insert(
+				$job_id,
+				'post_content',
+				(string) ( $post_data['post_content'] ?? '' ),
+				(string) $proposal['enhanced_content_html']
+			);
+			$enhanced_words = str_word_count( wp_strip_all_tags( (string) $proposal['enhanced_content_html'] ) );
+		} else {
+			// Classic / block-editor post.
+			$html = (string) ( $proposal['enhanced_content_html'] ?? '' );
+			$this->proposal_repo->insert(
+				$job_id,
+				'post_content',
+				(string) ( $post_data['post_content'] ?? '' ),
+				$html
+			);
+			$enhanced_words = str_word_count( wp_strip_all_tags( $html ) );
+		}
+
+		// ── Log issues, stats ─────────────────────────────────────────────────
+		$issues = implode( ' | ', (array) ( $proposal['issues'] ?? [] ) );
+		$notes  = implode( ' | ', (array) ( $proposal['review_notes'] ?? [] ) );
+
 		$this->log_repo->add( $job_id, 'info', "Issues: {$issues}", [
 			'notes'          => $notes,
 			'model'          => $response['model'],

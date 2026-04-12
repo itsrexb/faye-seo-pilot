@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class OpenAiClient implements AiClientInterface {
 
 	private const API_URL = 'https://api.openai.com/v1/chat/completions';
-	private const TIMEOUT = 60;
+	private const TIMEOUT = 120;
 
 	private string $api_key;
 	private string $model;
