@@ -2,12 +2,12 @@
 /**
  * Builds an HTML inline diff between two strings.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Content;
+namespace FayeSeoPilot\Content;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -64,8 +64,8 @@ final class DiffBuilder {
 	 */
 	private function html_block_diff( string $old, string $new ): string {
 		return '<div class="seopilot-diff-html">'
-			. '<div class="seopilot-diff-old"><strong>' . esc_html__( 'Current:', 'seo-pilot-pro' ) . '</strong><div class="seopilot-diff-content">' . wp_kses_post( $old ) . '</div></div>'
-			. '<div class="seopilot-diff-new"><strong>' . esc_html__( 'Suggested:', 'seo-pilot-pro' ) . '</strong><div class="seopilot-diff-content">' . wp_kses_post( $new ) . '</div></div>'
+			. '<div class="seopilot-diff-old"><strong>' . esc_html__( 'Current:', 'faye-seo-pilot' ) . '</strong><div class="seopilot-diff-content">' . wp_kses_post( $old ) . '</div></div>'
+			. '<div class="seopilot-diff-new"><strong>' . esc_html__( 'Suggested:', 'faye-seo-pilot' ) . '</strong><div class="seopilot-diff-content">' . wp_kses_post( $new ) . '</div></div>'
 			. '</div>';
 	}
 

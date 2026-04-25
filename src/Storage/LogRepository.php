@@ -2,12 +2,12 @@
 /**
  * CRUD for wp_seopilot_logs.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Storage;
+namespace FayeSeoPilot\Storage;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

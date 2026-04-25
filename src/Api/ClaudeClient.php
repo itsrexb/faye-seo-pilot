@@ -2,14 +2,14 @@
 /**
  * HTTP client for the Anthropic Messages API.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Api;
+namespace FayeSeoPilot\Api;
 
-use SeoPilotPro\Security\ApiKeyEncryption;
+use FayeSeoPilot\Security\ApiKeyEncryption;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -42,7 +42,7 @@ final class ClaudeClient implements AiClientInterface {
 		if ( empty( $this->api_key ) ) {
 			return new \WP_Error(
 				'seopilot_no_api_key',
-				__( 'Claude API key is not configured. Please set it in SEO Pilot Pro → Settings.', 'seo-pilot-pro' )
+				__( 'Claude API key is not configured. Please set it in Faye SEO Pilot → Settings.', 'faye-seo-pilot' )
 			);
 		}
 
@@ -73,7 +73,7 @@ final class ClaudeClient implements AiClientInterface {
 				'seopilot_request_failed',
 				sprintf(
 					/* translators: %s error message */
-					__( 'API request failed: %s', 'seo-pilot-pro' ),
+					__( 'API request failed: %s', 'faye-seo-pilot' ),
 					$response->get_error_message()
 				)
 			);
@@ -84,22 +84,22 @@ final class ClaudeClient implements AiClientInterface {
 		$data   = json_decode( $raw, true );
 
 		if ( $status === 401 ) {
-			return new \WP_Error( 'seopilot_auth_error', __( 'Invalid Claude API key.', 'seo-pilot-pro' ) );
+			return new \WP_Error( 'seopilot_auth_error', __( 'Invalid Claude API key.', 'faye-seo-pilot' ) );
 		}
 
 		if ( $status === 429 ) {
-			return new \WP_Error( 'seopilot_rate_limit', __( 'Claude API rate limit reached. Please wait and try again.', 'seo-pilot-pro' ) );
+			return new \WP_Error( 'seopilot_rate_limit', __( 'Claude API rate limit reached. Please wait and try again.', 'faye-seo-pilot' ) );
 		}
 
 		if ( $status !== 200 ) {
 			/* translators: %d: HTTP status code */
-			$error_msg = $data['error']['message'] ?? sprintf( __( 'API returned HTTP %d.', 'seo-pilot-pro' ), $status );
+			$error_msg = $data['error']['message'] ?? sprintf( __( 'API returned HTTP %d.', 'faye-seo-pilot' ), $status );
 			return new \WP_Error( 'seopilot_api_error', $error_msg );
 		}
 
 		$text = $data['content'][0]['text'] ?? '';
 		if ( empty( $text ) ) {
-			return new \WP_Error( 'seopilot_empty_response', __( 'Claude returned an empty response.', 'seo-pilot-pro' ) );
+			return new \WP_Error( 'seopilot_empty_response', __( 'Claude returned an empty response.', 'faye-seo-pilot' ) );
 		}
 
 		return [ 'text' => $text, 'model' => $data['model'] ?? $this->model ];

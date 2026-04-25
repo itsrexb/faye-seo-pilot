@@ -2,12 +2,12 @@
 /**
  * CRUD for wp_seopilot_jobs.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Jobs;
+namespace FayeSeoPilot\Jobs;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

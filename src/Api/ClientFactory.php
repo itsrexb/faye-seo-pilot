@@ -2,12 +2,12 @@
 /**
  * Instantiates the correct AI client based on the saved provider setting.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Api;
+namespace FayeSeoPilot\Api;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

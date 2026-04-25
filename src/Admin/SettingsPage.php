@@ -2,15 +2,15 @@
 /**
  * Plugin settings page — provider, API keys, model, brand voice, etc.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Admin;
+namespace FayeSeoPilot\Admin;
 
-use SeoPilotPro\Api\RequestFactory;
-use SeoPilotPro\Security\ApiKeyEncryption;
+use FayeSeoPilot\Api\RequestFactory;
+use FayeSeoPilot\Security\ApiKeyEncryption;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,21 +22,21 @@ final class SettingsPage {
 
 	public function register(): void {
 		$this->hook = add_menu_page(
-			__( 'SEO Pilot Pro', 'seo-pilot-pro' ),
-			__( 'SEO Pilot Pro', 'seo-pilot-pro' ),
+			__( 'Faye SEO Pilot', 'faye-seo-pilot' ),
+			__( 'Faye SEO Pilot', 'faye-seo-pilot' ),
 			'manage_options',
-			'seo-pilot-pro-settings',
+			'faye-seo-pilot-settings',
 			[ $this, 'render' ],
 			'dashicons-editor-spellcheck',
 			80
 		);
 
 		add_submenu_page(
-			'seo-pilot-pro-settings',
-			__( 'Settings', 'seo-pilot-pro' ),
-			__( 'Settings', 'seo-pilot-pro' ),
+			'faye-seo-pilot-settings',
+			__( 'Settings', 'faye-seo-pilot' ),
+			__( 'Settings', 'faye-seo-pilot' ),
 			'manage_options',
-			'seo-pilot-pro-settings',
+			'faye-seo-pilot-settings',
 			[ $this, 'render' ]
 		);
 
@@ -99,7 +99,7 @@ final class SettingsPage {
 
 	public function render(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to access this page.', 'seo-pilot-pro' ) );
+			wp_die( esc_html__( 'You do not have permission to access this page.', 'faye-seo-pilot' ) );
 		}
 
 		$settings         = get_option( 'seopilot_settings', [] );
@@ -127,20 +127,20 @@ final class SettingsPage {
 		];
 
 		$tones = [
-			'professional'   => __( 'Professional', 'seo-pilot-pro' ),
-			'friendly'       => __( 'Friendly', 'seo-pilot-pro' ),
-			'authoritative'  => __( 'Authoritative', 'seo-pilot-pro' ),
-			'conversational' => __( 'Conversational', 'seo-pilot-pro' ),
-			'empathetic'     => __( 'Empathetic', 'seo-pilot-pro' ),
+			'professional'   => __( 'Professional', 'faye-seo-pilot' ),
+			'friendly'       => __( 'Friendly', 'faye-seo-pilot' ),
+			'authoritative'  => __( 'Authoritative', 'faye-seo-pilot' ),
+			'conversational' => __( 'Conversational', 'faye-seo-pilot' ),
+			'empathetic'     => __( 'Empathetic', 'faye-seo-pilot' ),
 		];
 
 		?>
 		<div class="wrap seopilot-wrap">
-			<h1><?php esc_html_e( 'SEO Pilot Pro — Settings', 'seo-pilot-pro' ); ?></h1>
+			<h1><?php esc_html_e( 'Faye SEO Pilot — Settings', 'faye-seo-pilot' ); ?></h1>
 
 			<div class="seopilot-notice-privacy notice notice-info">
 				<p>
-					<?php esc_html_e( 'Privacy notice: This plugin sends post content (title, body, meta) to the selected AI provider\'s API for analysis. No content is stored by the provider beyond what their standard API terms permit. Review your site\'s privacy policy accordingly.', 'seo-pilot-pro' ); ?>
+					<?php esc_html_e( 'Privacy notice: This plugin sends post content (title, body, meta) to the selected AI provider\'s API for analysis. No content is stored by the provider beyond what their standard API terms permit. Review your site\'s privacy policy accordingly.', 'faye-seo-pilot' ); ?>
 				</p>
 			</div>
 
@@ -151,18 +151,18 @@ final class SettingsPage {
 
 					<!-- Provider -->
 					<tr>
-						<th scope="row"><label for="seopilot_provider"><?php esc_html_e( 'AI Provider', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_provider"><?php esc_html_e( 'AI Provider', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<select id="seopilot_provider" name="seopilot_settings[provider]">
-								<option value="anthropic" <?php selected( $provider, 'anthropic' ); ?>><?php esc_html_e( 'Anthropic (Claude)', 'seo-pilot-pro' ); ?></option>
-								<option value="openai"    <?php selected( $provider, 'openai' ); ?>><?php esc_html_e( 'OpenAI (GPT)', 'seo-pilot-pro' ); ?></option>
+								<option value="anthropic" <?php selected( $provider, 'anthropic' ); ?>><?php esc_html_e( 'Anthropic (Claude)', 'faye-seo-pilot' ); ?></option>
+								<option value="openai"    <?php selected( $provider, 'openai' ); ?>><?php esc_html_e( 'OpenAI (GPT)', 'faye-seo-pilot' ); ?></option>
 							</select>
 						</td>
 					</tr>
 
 					<!-- Anthropic section -->
 					<tr class="seopilot-provider-section seopilot-provider--anthropic">
-						<th scope="row"><label for="seopilot_api_key"><?php esc_html_e( 'Anthropic API Key', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_api_key"><?php esc_html_e( 'Anthropic API Key', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<input
 								type="password"
@@ -171,21 +171,21 @@ final class SettingsPage {
 								value=""
 								class="regular-text"
 								autocomplete="new-password"
-								placeholder="<?php echo $has_api_key ? esc_attr__( 'Leave blank to keep saved key', 'seo-pilot-pro' ) : esc_attr__( 'Enter your Anthropic API key', 'seo-pilot-pro' ); ?>"
+								placeholder="<?php echo $has_api_key ? esc_attr__( 'Leave blank to keep saved key', 'faye-seo-pilot' ) : esc_attr__( 'Enter your Anthropic API key', 'faye-seo-pilot' ); ?>"
 							/>
 							<p class="description">
-								<?php esc_html_e( 'Your Anthropic API key from console.anthropic.com. Stored encrypted. Leave blank to keep the current key.', 'seo-pilot-pro' ); ?>
+								<?php esc_html_e( 'Your Anthropic API key from console.anthropic.com. Stored encrypted. Leave blank to keep the current key.', 'faye-seo-pilot' ); ?>
 							</p>
 							<?php if ( $has_api_key ) : ?>
-								<span class="seopilot-badge seopilot-badge--ok">&#10003; <?php esc_html_e( 'Key saved (encrypted)', 'seo-pilot-pro' ); ?></span>
+								<span class="seopilot-badge seopilot-badge--ok">&#10003; <?php esc_html_e( 'Key saved (encrypted)', 'faye-seo-pilot' ); ?></span>
 							<?php else : ?>
-								<span class="seopilot-badge seopilot-badge--warn"><?php esc_html_e( 'No key set', 'seo-pilot-pro' ); ?></span>
+								<span class="seopilot-badge seopilot-badge--warn"><?php esc_html_e( 'No key set', 'faye-seo-pilot' ); ?></span>
 							<?php endif; ?>
 						</td>
 					</tr>
 
 					<tr class="seopilot-provider-section seopilot-provider--anthropic">
-						<th scope="row"><label for="seopilot_model"><?php esc_html_e( 'Claude Model', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_model"><?php esc_html_e( 'Claude Model', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<select id="seopilot_model" name="seopilot_settings[model]">
 								<?php foreach ( $claude_models as $id => $label ) : ?>
@@ -199,7 +199,7 @@ final class SettingsPage {
 
 					<!-- OpenAI section -->
 					<tr class="seopilot-provider-section seopilot-provider--openai">
-						<th scope="row"><label for="seopilot_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_openai_api_key"><?php esc_html_e( 'OpenAI API Key', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<input
 								type="password"
@@ -208,21 +208,21 @@ final class SettingsPage {
 								value=""
 								class="regular-text"
 								autocomplete="new-password"
-								placeholder="<?php echo $has_openai_key ? esc_attr__( 'Leave blank to keep saved key', 'seo-pilot-pro' ) : esc_attr__( 'Enter your OpenAI API key', 'seo-pilot-pro' ); ?>"
+								placeholder="<?php echo $has_openai_key ? esc_attr__( 'Leave blank to keep saved key', 'faye-seo-pilot' ) : esc_attr__( 'Enter your OpenAI API key', 'faye-seo-pilot' ); ?>"
 							/>
 							<p class="description">
-								<?php esc_html_e( 'Your OpenAI API key from platform.openai.com. Stored encrypted. Leave blank to keep the current key.', 'seo-pilot-pro' ); ?>
+								<?php esc_html_e( 'Your OpenAI API key from platform.openai.com. Stored encrypted. Leave blank to keep the current key.', 'faye-seo-pilot' ); ?>
 							</p>
 							<?php if ( $has_openai_key ) : ?>
-								<span class="seopilot-badge seopilot-badge--ok">&#10003; <?php esc_html_e( 'Key saved (encrypted)', 'seo-pilot-pro' ); ?></span>
+								<span class="seopilot-badge seopilot-badge--ok">&#10003; <?php esc_html_e( 'Key saved (encrypted)', 'faye-seo-pilot' ); ?></span>
 							<?php else : ?>
-								<span class="seopilot-badge seopilot-badge--warn"><?php esc_html_e( 'No key set', 'seo-pilot-pro' ); ?></span>
+								<span class="seopilot-badge seopilot-badge--warn"><?php esc_html_e( 'No key set', 'faye-seo-pilot' ); ?></span>
 							<?php endif; ?>
 						</td>
 					</tr>
 
 					<tr class="seopilot-provider-section seopilot-provider--openai">
-						<th scope="row"><label for="seopilot_openai_model"><?php esc_html_e( 'OpenAI Model', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_openai_model"><?php esc_html_e( 'OpenAI Model', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<select id="seopilot_openai_model" name="seopilot_settings[openai_model]">
 								<?php foreach ( $openai_models as $id => $label ) : ?>
@@ -236,7 +236,7 @@ final class SettingsPage {
 
 					<!-- Shared settings -->
 					<tr>
-						<th scope="row"><label for="seopilot_tone"><?php esc_html_e( 'Content Tone', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_tone"><?php esc_html_e( 'Content Tone', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<select id="seopilot_tone" name="seopilot_settings[tone]">
 								<?php foreach ( $tones as $key => $label ) : ?>
@@ -249,35 +249,35 @@ final class SettingsPage {
 					</tr>
 
 					<tr>
-						<th scope="row"><label for="seopilot_locale"><?php esc_html_e( 'Default Language (ISO)', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_locale"><?php esc_html_e( 'Default Language (ISO)', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<input type="text" id="seopilot_locale" name="seopilot_settings[locale]" value="<?php echo esc_attr( $locale ); ?>" class="small-text" maxlength="10" />
-							<p class="description"><?php esc_html_e( 'e.g. de, en, fr — used if language cannot be auto-detected.', 'seo-pilot-pro' ); ?></p>
+							<p class="description"><?php esc_html_e( 'e.g. de, en, fr — used if language cannot be auto-detected.', 'faye-seo-pilot' ); ?></p>
 						</td>
 					</tr>
 
 					<tr>
-						<th scope="row"><label for="seopilot_brand_voice"><?php esc_html_e( 'Brand Voice', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_brand_voice"><?php esc_html_e( 'Brand Voice', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<textarea id="seopilot_brand_voice" name="seopilot_settings[brand_voice]" rows="3" class="large-text"><?php echo esc_textarea( $brand_voice ); ?></textarea>
-							<p class="description"><?php esc_html_e( 'Describe your brand voice to guide the AI\'s writing style. E.g. "Friendly dental practice in Freienstein. Swiss German market. Reassuring, clear, never alarmist."', 'seo-pilot-pro' ); ?></p>
+							<p class="description"><?php esc_html_e( 'Describe your brand voice to guide the AI\'s writing style. E.g. "Friendly dental practice in Freienstein. Swiss German market. Reassuring, clear, never alarmist."', 'faye-seo-pilot' ); ?></p>
 						</td>
 					</tr>
 
 					<tr>
-						<th scope="row"><label for="seopilot_system_prompt"><?php esc_html_e( 'Custom System Prompt', 'seo-pilot-pro' ); ?></label></th>
+						<th scope="row"><label for="seopilot_system_prompt"><?php esc_html_e( 'Custom System Prompt', 'faye-seo-pilot' ); ?></label></th>
 						<td>
 							<textarea id="seopilot_system_prompt" name="seopilot_settings[system_prompt]" rows="20" class="large-text"><?php echo esc_textarea( $sys_prompt ); ?></textarea>
 							<p class="description">
-								<?php esc_html_e( 'Customize the system prompt sent to the AI. The default above is pre-filled — edit it to match your site. The JSON output block at the bottom must stay intact so the plugin can parse the response.', 'seo-pilot-pro' ); ?>
-								&nbsp;<button type="button" id="seopilot-reset-prompt-btn" class="button button-small"><?php esc_html_e( 'Use Default', 'seo-pilot-pro' ); ?></button>
+								<?php esc_html_e( 'Customize the system prompt sent to the AI. The default above is pre-filled — edit it to match your site. The JSON output block at the bottom must stay intact so the plugin can parse the response.', 'faye-seo-pilot' ); ?>
+								&nbsp;<button type="button" id="seopilot-reset-prompt-btn" class="button button-small"><?php esc_html_e( 'Use Default', 'faye-seo-pilot' ); ?></button>
 							</p>
 						</td>
 					</tr>
 
 				</table>
 
-				<?php submit_button( __( 'Save Settings', 'seo-pilot-pro' ) ); ?>
+				<?php submit_button( __( 'Save Settings', 'faye-seo-pilot' ) ); ?>
 			</form>
 		</div>
 
@@ -301,7 +301,7 @@ final class SettingsPage {
 			var btn = document.getElementById( 'seopilot-reset-prompt-btn' );
 			if ( ! btn ) return;
 			btn.addEventListener( 'click', function () {
-				if ( ! window.confirm( '<?php echo esc_js( __( 'Reset to the plugin default prompt?', 'seo-pilot-pro' ) ); ?>' ) ) {
+				if ( ! window.confirm( '<?php echo esc_js( __( 'Reset to the plugin default prompt?', 'faye-seo-pilot' ) ); ?>' ) ) {
 					return;
 				}
 				if ( typeof SeoPilot !== 'undefined' && SeoPilot.default_system_prompt ) {

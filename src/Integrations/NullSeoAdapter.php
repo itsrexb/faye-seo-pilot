@@ -2,12 +2,12 @@
 /**
  * No-op SEO adapter used when no SEO plugin is active.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Integrations;
+namespace FayeSeoPilot\Integrations;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -33,6 +33,6 @@ final class NullSeoAdapter implements SeoAdapterInterface {
 	}
 
 	public function name(): string {
-		return __( 'None (no SEO plugin detected)', 'seo-pilot-pro' );
+		return __( 'None (no SEO plugin detected)', 'faye-seo-pilot' );
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name:       SEO Pilot Pro
- * Plugin URI:        https://github.com/centraleffects/seo-pilot-pro
+ * Plugin Name:       Faye SEO Pilot
+ * Plugin URI:        https://github.com/centraleffects/faye-seo-pilot
  * Description:       Audits WordPress posts and pages using AI, then proposes SEO-optimised titles, meta descriptions, and rewritten body content. Every suggestion is reviewed and approved field-by-field before any change is saved.
  * Version:           1.0.0
  * Requires at least: 6.3
@@ -9,10 +9,10 @@
  * Author:            Rex Bengil
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       seo-pilot-pro
+ * Text Domain:       faye-seo-pilot
  * Domain Path:       /languages
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
@@ -30,10 +30,10 @@ define( 'SEOPILOT_MIN_WP', '6.3' );
 define( 'SEOPILOT_MIN_PHP', '8.1' );
 
 /**
- * PSR-4 style autoloader for the SeoPilotPro namespace.
+ * PSR-4 style autoloader for the FayeSeoPilot namespace.
  */
 spl_autoload_register( function ( string $class ): void {
-	$prefix = 'SeoPilotPro\\';
+	$prefix = 'FayeSeoPilot\\';
 	$base   = SEOPILOT_PLUGIN_DIR . 'src/';
 
 	if ( strncmp( $prefix, $class, strlen( $prefix ) ) !== 0 ) {
@@ -52,14 +52,14 @@ spl_autoload_register( function ( string $class ): void {
  * Bootstrap the plugin once WordPress and all plugins are loaded.
  */
 add_action( 'plugins_loaded', function (): void {
-	( new SeoPilotPro\Plugin() )->init();
+	( new FayeSeoPilot\Plugin() )->init();
 } );
 
 /**
  * Activation hook — install DB tables.
  */
 register_activation_hook( __FILE__, function (): void {
-	( new SeoPilotPro\Storage\Installer() )->install();
+	( new FayeSeoPilot\Storage\Installer() )->install();
 	flush_rewrite_rules();
 } );
 

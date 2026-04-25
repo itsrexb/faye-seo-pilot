@@ -13,12 +13,12 @@
  * NOTE: If the WordPress secret keys in wp-config.php are regenerated, previously encrypted
  * values will no longer be decryptable. Users must re-enter their API keys in that case.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Security;
+namespace FayeSeoPilot\Security;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

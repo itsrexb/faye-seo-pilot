@@ -2,14 +2,14 @@
 /**
  * Creates and restores content snapshots before applying changes.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Content;
+namespace FayeSeoPilot\Content;
 
-use SeoPilotPro\Integrations\SeoAdapterInterface;
+use FayeSeoPilot\Integrations\SeoAdapterInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -71,16 +71,16 @@ final class RollbackManager {
 		$job = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $job_id ) );
 
 		if ( ! $job ) {
-			return new \WP_Error( 'seopilot_no_job', __( 'Job not found.', 'seo-pilot-pro' ) );
+			return new \WP_Error( 'seopilot_no_job', __( 'Job not found.', 'faye-seo-pilot' ) );
 		}
 
 		if ( empty( $job->snapshot_json ) ) {
-			return new \WP_Error( 'seopilot_no_snapshot', __( 'No rollback snapshot exists for this job. The job may not have been applied yet.', 'seo-pilot-pro' ) );
+			return new \WP_Error( 'seopilot_no_snapshot', __( 'No rollback snapshot exists for this job. The job may not have been applied yet.', 'faye-seo-pilot' ) );
 		}
 
 		$snapshot = json_decode( $job->snapshot_json, true );
 		if ( ! is_array( $snapshot ) ) {
-			return new \WP_Error( 'seopilot_bad_snapshot', __( 'Snapshot data is corrupted.', 'seo-pilot-pro' ) );
+			return new \WP_Error( 'seopilot_bad_snapshot', __( 'Snapshot data is corrupted.', 'faye-seo-pilot' ) );
 		}
 
 		$post_id = (int) $job->post_id;

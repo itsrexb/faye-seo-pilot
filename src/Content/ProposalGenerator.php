@@ -2,19 +2,19 @@
 /**
  * Orchestrates the audit: extract → request → parse → store.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Content;
+namespace FayeSeoPilot\Content;
 
-use SeoPilotPro\Api\AiClientInterface;
-use SeoPilotPro\Api\RequestFactory;
-use SeoPilotPro\Api\ResponseParser;
-use SeoPilotPro\Jobs\JobRepository;
-use SeoPilotPro\Storage\ProposalRepository;
-use SeoPilotPro\Storage\LogRepository;
+use FayeSeoPilot\Api\AiClientInterface;
+use FayeSeoPilot\Api\RequestFactory;
+use FayeSeoPilot\Api\ResponseParser;
+use FayeSeoPilot\Jobs\JobRepository;
+use FayeSeoPilot\Storage\ProposalRepository;
+use FayeSeoPilot\Storage\LogRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

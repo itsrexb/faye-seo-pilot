@@ -2,12 +2,12 @@
 /**
  * Capability constants and helpers.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Security;
+namespace FayeSeoPilot\Security;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

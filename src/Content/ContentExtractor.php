@@ -7,14 +7,14 @@
  * can improve each widget in isolation and the result can be written back to
  * the exact element — no cross-widget content mixing.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Content;
+namespace FayeSeoPilot\Content;
 
-use SeoPilotPro\Integrations\SeoAdapterInterface;
+use FayeSeoPilot\Integrations\SeoAdapterInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -34,11 +34,11 @@ final class ContentExtractor {
 		$post = get_post( $post_id );
 
 		if ( ! $post instanceof \WP_Post ) {
-			return new \WP_Error( 'seopilot_invalid_post', __( 'Post not found.', 'seo-pilot-pro' ) );
+			return new \WP_Error( 'seopilot_invalid_post', __( 'Post not found.', 'faye-seo-pilot' ) );
 		}
 
 		if ( ! in_array( $post->post_status, [ 'publish', 'draft', 'pending', 'private' ], true ) ) {
-			return new \WP_Error( 'seopilot_invalid_status', __( 'Post status is not auditable.', 'seo-pilot-pro' ) );
+			return new \WP_Error( 'seopilot_invalid_status', __( 'Post status is not auditable.', 'faye-seo-pilot' ) );
 		}
 
 		$settings    = get_option( 'seopilot_settings', [] );

@@ -1,4 +1,4 @@
-/* SEO Pilot Pro — Admin JS */
+/* Faye SEO Pilot — Admin JS */
 /* global SeoPilot, jQuery */
 
 ( function ( $ ) {

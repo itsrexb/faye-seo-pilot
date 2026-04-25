@@ -2,12 +2,12 @@
 /**
  * Builds the system prompt and user message for the AI audit.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Api;
+namespace FayeSeoPilot\Api;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

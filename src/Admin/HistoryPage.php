@@ -2,15 +2,15 @@
 /**
  * History page — audit log and rollback links.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Admin;
+namespace FayeSeoPilot\Admin;
 
-use SeoPilotPro\Jobs\JobRepository;
-use SeoPilotPro\Storage\LogRepository;
+use FayeSeoPilot\Jobs\JobRepository;
+use FayeSeoPilot\Storage\LogRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -27,11 +27,11 @@ final class HistoryPage {
 
 	public function register(): void {
 		$this->hook = add_submenu_page(
-			'seo-pilot-pro-settings',
-			__( 'Audit History', 'seo-pilot-pro' ),
-			__( 'History', 'seo-pilot-pro' ),
+			'faye-seo-pilot-settings',
+			__( 'Audit History', 'faye-seo-pilot' ),
+			__( 'History', 'faye-seo-pilot' ),
 			'edit_posts',
-			'seo-pilot-pro-history',
+			'faye-seo-pilot-history',
 			[ $this, 'render' ]
 		);
 	}
@@ -42,7 +42,7 @@ final class HistoryPage {
 
 	public function render(): void {
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions.', 'seo-pilot-pro' ) );
+			wp_die( esc_html__( 'Insufficient permissions.', 'faye-seo-pilot' ) );
 		}
 
 		$paged    = max( 1, absint( $_GET['paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination, no state change
@@ -52,37 +52,37 @@ final class HistoryPage {
 		$pages    = (int) ceil( $total / $per_page );
 
 		$status_labels = [
-			'pending'        => __( 'Pending', 'seo-pilot-pro' ),
-			'audited'        => __( 'Audited', 'seo-pilot-pro' ),
-			'in_review'      => __( 'In Review', 'seo-pilot-pro' ),
-			'applied'        => __( 'Applied', 'seo-pilot-pro' ),
-			'failed'         => __( 'Failed', 'seo-pilot-pro' ),
-			'rolled_back'    => __( 'Rolled Back', 'seo-pilot-pro' ),
+			'pending'        => __( 'Pending', 'faye-seo-pilot' ),
+			'audited'        => __( 'Audited', 'faye-seo-pilot' ),
+			'in_review'      => __( 'In Review', 'faye-seo-pilot' ),
+			'applied'        => __( 'Applied', 'faye-seo-pilot' ),
+			'failed'         => __( 'Failed', 'faye-seo-pilot' ),
+			'rolled_back'    => __( 'Rolled Back', 'faye-seo-pilot' ),
 		];
 
 		?>
 		<div class="wrap seopilot-wrap">
-			<h1><?php esc_html_e( 'Audit History', 'seo-pilot-pro' ); ?></h1>
+			<h1><?php esc_html_e( 'Audit History', 'faye-seo-pilot' ); ?></h1>
 
 			<div id="seopilot-history-notice" style="display:none;" class="seopilot-apply-notice"></div>
 
 			<table class="wp-list-table widefat fixed striped seopilot-table">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Job', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Post', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Type', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Model', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Status', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Requested By', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Date', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'seo-pilot-pro' ); ?></th>
+						<th><?php esc_html_e( 'Job', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Post', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Type', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Model', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Status', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Requested By', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Date', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'faye-seo-pilot' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php if ( empty( $jobs ) ) : ?>
 						<tr>
-							<td colspan="8"><?php esc_html_e( 'No audit history yet. Go to the Content Queue to run your first audit.', 'seo-pilot-pro' ); ?></td>
+							<td colspan="8"><?php esc_html_e( 'No audit history yet. Go to the Content Queue to run your first audit.', 'faye-seo-pilot' ); ?></td>
 						</tr>
 					<?php else : ?>
 						<?php foreach ( $jobs as $job ) : ?>
@@ -90,8 +90,8 @@ final class HistoryPage {
 							$post      = get_post( (int) $job->post_id );
 							$user      = get_user_by( 'id', (int) $job->requested_by );
 							/* translators: %d: post ID */
-							$post_title = $post ? $post->post_title : sprintf( __( 'Post #%d (deleted)', 'seo-pilot-pro' ), $job->post_id );
-							$username   = $user ? $user->display_name : __( 'Unknown', 'seo-pilot-pro' );
+							$post_title = $post ? $post->post_title : sprintf( __( 'Post #%d (deleted)', 'faye-seo-pilot' ), $job->post_id );
+							$username   = $user ? $user->display_name : __( 'Unknown', 'faye-seo-pilot' );
 							$status_label = $status_labels[ $job->status ] ?? $job->status;
 							?>
 							<tr>
@@ -99,7 +99,7 @@ final class HistoryPage {
 								<td>
 									<?php if ( $post ) : ?>
 										<a href="<?php echo esc_url( (string) get_edit_post_link( $post->ID ) ); ?>">
-											<?php echo esc_html( $post_title ?: __( '(no title)', 'seo-pilot-pro' ) ); ?>
+											<?php echo esc_html( $post_title ?: __( '(no title)', 'faye-seo-pilot' ) ); ?>
 										</a>
 									<?php else : ?>
 										<?php echo esc_html( $post_title ); ?>
@@ -116,8 +116,8 @@ final class HistoryPage {
 								<td><?php echo esc_html( date_i18n( 'Y-m-d H:i', strtotime( $job->created_at ) ) ); ?></td>
 								<td>
 									<?php if ( in_array( $job->status, [ 'audited', 'in_review', 'partially_approved', 'applied' ], true ) ) : ?>
-										<a href="<?php echo esc_url( admin_url( 'admin.php?page=seo-pilot-pro-review&job_id=' . $job->id ) ); ?>" class="button button-small">
-											<?php esc_html_e( 'Review', 'seo-pilot-pro' ); ?>
+										<a href="<?php echo esc_url( admin_url( 'admin.php?page=faye-seo-pilot-review&job_id=' . $job->id ) ); ?>" class="button button-small">
+											<?php esc_html_e( 'Review', 'faye-seo-pilot' ); ?>
 										</a>
 									<?php endif; ?>
 									<?php if ( $job->status === 'applied' && ! empty( $job->snapshot_json ) ) : ?>
@@ -125,7 +125,7 @@ final class HistoryPage {
 											type="button"
 											class="button button-small seopilot-rollback-btn"
 											data-job-id="<?php echo esc_attr( (string) $job->id ); ?>"
-										><?php esc_html_e( 'Roll Back', 'seo-pilot-pro' ); ?></button>
+										><?php esc_html_e( 'Roll Back', 'faye-seo-pilot' ); ?></button>
 									<?php endif; ?>
 								</td>
 							</tr>

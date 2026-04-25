@@ -2,12 +2,12 @@
 /**
  * Yoast SEO adapter — reads and writes Yoast meta fields.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Integrations;
+namespace FayeSeoPilot\Integrations;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

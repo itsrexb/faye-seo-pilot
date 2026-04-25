@@ -2,14 +2,14 @@
 /**
  * Content queue page — lists posts/pages with audit actions.
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Admin;
+namespace FayeSeoPilot\Admin;
 
-use SeoPilotPro\Jobs\JobRepository;
+use FayeSeoPilot\Jobs\JobRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -23,11 +23,11 @@ final class ContentListPage {
 
 	public function register(): void {
 		$this->hook = add_submenu_page(
-			'seo-pilot-pro-settings',
-			__( 'Content Queue', 'seo-pilot-pro' ),
-			__( 'Content Queue', 'seo-pilot-pro' ),
+			'faye-seo-pilot-settings',
+			__( 'Content Queue', 'faye-seo-pilot' ),
+			__( 'Content Queue', 'faye-seo-pilot' ),
 			'edit_posts',
-			'seo-pilot-pro-queue',
+			'faye-seo-pilot-queue',
 			[ $this, 'render' ]
 		);
 	}
@@ -38,7 +38,7 @@ final class ContentListPage {
 
 	public function render(): void {
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions.', 'seo-pilot-pro' ) );
+			wp_die( esc_html__( 'Insufficient permissions.', 'faye-seo-pilot' ) );
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only display filters, no state change
@@ -75,18 +75,18 @@ final class ContentListPage {
 
 		?>
 		<div class="wrap seopilot-wrap">
-			<h1><?php esc_html_e( 'Content Queue', 'seo-pilot-pro' ); ?></h1>
-			<p class="seopilot-subtitle"><?php esc_html_e( 'Select posts or pages to audit with Claude. Changes require your approval before being saved.', 'seo-pilot-pro' ); ?></p>
+			<h1><?php esc_html_e( 'Content Queue', 'faye-seo-pilot' ); ?></h1>
+			<p class="seopilot-subtitle"><?php esc_html_e( 'Select posts or pages to audit with Claude. Changes require your approval before being saved.', 'faye-seo-pilot' ); ?></p>
 
 			<form method="get" class="seopilot-filter-form">
-				<input type="hidden" name="page" value="seo-pilot-pro-queue" />
+				<input type="hidden" name="page" value="faye-seo-pilot-queue" />
 				<select name="post_type">
-					<option value="any" <?php selected( $post_type, 'any' ); ?>><?php esc_html_e( 'All types', 'seo-pilot-pro' ); ?></option>
-					<option value="post" <?php selected( $post_type, 'post' ); ?>><?php esc_html_e( 'Posts', 'seo-pilot-pro' ); ?></option>
-					<option value="page" <?php selected( $post_type, 'page' ); ?>><?php esc_html_e( 'Pages', 'seo-pilot-pro' ); ?></option>
+					<option value="any" <?php selected( $post_type, 'any' ); ?>><?php esc_html_e( 'All types', 'faye-seo-pilot' ); ?></option>
+					<option value="post" <?php selected( $post_type, 'post' ); ?>><?php esc_html_e( 'Posts', 'faye-seo-pilot' ); ?></option>
+					<option value="page" <?php selected( $post_type, 'page' ); ?>><?php esc_html_e( 'Pages', 'faye-seo-pilot' ); ?></option>
 				</select>
-				<input type="search" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search…', 'seo-pilot-pro' ); ?>" />
-				<?php submit_button( __( 'Filter', 'seo-pilot-pro' ), 'secondary', '', false ); ?>
+				<input type="search" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search…', 'faye-seo-pilot' ); ?>" />
+				<?php submit_button( __( 'Filter', 'faye-seo-pilot' ), 'secondary', '', false ); ?>
 			</form>
 
 			<div id="seopilot-audit-notice" class="seopilot-audit-notice" style="display:none;"></div>
@@ -95,18 +95,18 @@ final class ContentListPage {
 				<thead>
 					<tr>
 						<th class="check-column"><input type="checkbox" id="seopilot-select-all" /></th>
-						<th><?php esc_html_e( 'Title', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Type', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Status', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Words', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Modified', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Last Audit', 'seo-pilot-pro' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'seo-pilot-pro' ); ?></th>
+						<th><?php esc_html_e( 'Title', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Type', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Status', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Words', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Modified', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Last Audit', 'faye-seo-pilot' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'faye-seo-pilot' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php if ( empty( $posts ) ) : ?>
-						<tr><td colspan="8"><?php esc_html_e( 'No posts found.', 'seo-pilot-pro' ); ?></td></tr>
+						<tr><td colspan="8"><?php esc_html_e( 'No posts found.', 'faye-seo-pilot' ); ?></td></tr>
 					<?php else : ?>
 						<?php foreach ( $posts as $post ) : ?>
 							<?php
@@ -120,7 +120,7 @@ final class ContentListPage {
 								</td>
 								<td>
 									<strong>
-										<a href="<?php echo esc_url( (string) $edit_url ); ?>"><?php echo esc_html( $post->post_title ?: __( '(no title)', 'seo-pilot-pro' ) ); ?></a>
+										<a href="<?php echo esc_url( (string) $edit_url ); ?>"><?php echo esc_html( $post->post_title ?: __( '(no title)', 'faye-seo-pilot' ) ); ?></a>
 									</strong>
 								</td>
 								<td><?php echo esc_html( $post->post_type ); ?></td>
@@ -134,19 +134,19 @@ final class ContentListPage {
 										</span>
 										<br /><small><?php echo esc_html( date_i18n( 'Y-m-d', strtotime( $last_job->created_at ) ) ); ?></small>
 									<?php else : ?>
-										<span class="seopilot-status seopilot-status--none"><?php esc_html_e( 'Never', 'seo-pilot-pro' ); ?></span>
+										<span class="seopilot-status seopilot-status--none"><?php esc_html_e( 'Never', 'faye-seo-pilot' ); ?></span>
 									<?php endif; ?>
 								</td>
 								<td>
 									<button
 										class="button button-primary seopilot-audit-btn"
 										data-post-id="<?php echo esc_attr( (string) $post->ID ); ?>"
-									><?php esc_html_e( 'Audit', 'seo-pilot-pro' ); ?></button>
+									><?php esc_html_e( 'Audit', 'faye-seo-pilot' ); ?></button>
 									<?php if ( $last_job && in_array( $last_job->status, [ 'audited', 'in_review', 'partially_approved' ], true ) ) : ?>
 										<a
-											href="<?php echo esc_url( admin_url( 'admin.php?page=seo-pilot-pro-review&job_id=' . $last_job->id ) ); ?>"
+											href="<?php echo esc_url( admin_url( 'admin.php?page=faye-seo-pilot-review&job_id=' . $last_job->id ) ); ?>"
 											class="button"
-										><?php esc_html_e( 'Review', 'seo-pilot-pro' ); ?></a>
+										><?php esc_html_e( 'Review', 'faye-seo-pilot' ); ?></a>
 									<?php endif; ?>
 								</td>
 							</tr>
@@ -174,7 +174,7 @@ final class ContentListPage {
 
 			<div class="seopilot-bulk-bar">
 				<button id="seopilot-bulk-audit" class="button button-primary" disabled>
-					<?php esc_html_e( 'Audit Selected', 'seo-pilot-pro' ); ?>
+					<?php esc_html_e( 'Audit Selected', 'faye-seo-pilot' ); ?>
 				</button>
 				<span id="seopilot-selected-count" class="seopilot-selected-count"></span>
 			</div>

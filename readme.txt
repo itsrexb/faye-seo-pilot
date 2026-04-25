@@ -1,4 +1,4 @@
-=== SEO Pilot Pro ===
+=== Faye SEO Pilot ===
 Contributors: rexbengil
 Tags: seo, ai, content, meta-description, openai
 Requires at least: 6.3
@@ -12,7 +12,7 @@ AI-powered SEO audit and content optimisation for WordPress. Review AI suggestio
 
 == Description ==
 
-SEO Pilot Pro connects your WordPress site to an AI API (Anthropic Claude or OpenAI) to audit posts and pages for SEO gaps and content quality, then generates improved suggestions for editors to review before publishing.
+Faye SEO Pilot connects your WordPress site to an AI API (Anthropic Claude or OpenAI) to audit posts and pages for SEO gaps and content quality, then generates improved suggestions for editors to review before publishing.
 
 **Key features:**
 
@@ -33,7 +33,7 @@ This plugin sends post content (title, body, meta fields) to the configured AI p
 
 == Installation ==
 
-1. Upload the `seo-pilot-pro` folder to `/wp-content/plugins/`.
+1. Upload the `faye-seo-pilot` folder to `/wp-content/plugins/`.
 2. Activate the plugin in **Plugins → Installed Plugins**.
 3. Go to **SEO Pilot → Settings** and enter your API key.
 4. Select a model and configure your brand voice and tone.

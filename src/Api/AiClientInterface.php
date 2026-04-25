@@ -2,12 +2,12 @@
 /**
  * Contract for AI API clients (Anthropic, OpenAI, …).
  *
- * @package SeoPilotPro
+ * @package FayeSeoPilot
  */
 
 declare( strict_types=1 );
 
-namespace SeoPilotPro\Api;
+namespace FayeSeoPilot\Api;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
