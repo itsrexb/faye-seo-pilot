@@ -281,35 +281,6 @@ final class SettingsPage {
 			</form>
 		</div>
 
-		<script>
-		( function () {
-			var select = document.getElementById( 'seopilot_provider' );
-			if ( ! select ) return;
-
-			function applyVisibility() {
-				var provider = select.value;
-				document.querySelectorAll( '.seopilot-provider-section' ).forEach( function ( row ) {
-					row.style.display = row.classList.contains( 'seopilot-provider--' + provider ) ? '' : 'none';
-				} );
-			}
-
-			select.addEventListener( 'change', applyVisibility );
-			applyVisibility();
-		} )();
-
-		( function () {
-			var btn = document.getElementById( 'seopilot-reset-prompt-btn' );
-			if ( ! btn ) return;
-			btn.addEventListener( 'click', function () {
-				if ( ! window.confirm( '<?php echo esc_js( __( 'Reset to the plugin default prompt?', 'faye-seo-pilot' ) ); ?>' ) ) {
-					return;
-				}
-				if ( typeof SeoPilot !== 'undefined' && SeoPilot.default_system_prompt ) {
-					document.getElementById( 'seopilot_system_prompt' ).value = SeoPilot.default_system_prompt;
-				}
-			} );
-		} )();
-		</script>
 		<?php
 	}
 }

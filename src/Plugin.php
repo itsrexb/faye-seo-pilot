@@ -110,7 +110,8 @@ final class Plugin {
 					'apply_failed'  => __( 'Apply failed: ', 'faye-seo-pilot' ),
 					'rolling_back'  => __( 'Rolling back…', 'faye-seo-pilot' ),
 					'rollback_done' => __( 'Rollback complete.', 'faye-seo-pilot' ),
-					'reauditing'    => __( 'Re-auditing…', 'faye-seo-pilot' ),
+					'reauditing'           => __( 'Re-auditing…', 'faye-seo-pilot' ),
+					'reset_prompt_confirm' => __( 'Reset to the plugin default prompt?', 'faye-seo-pilot' ),
 				],
 			] );
 		} );

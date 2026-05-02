@@ -285,4 +285,36 @@
 		} );
 	} );
 
+	/* ─── Settings page ───────────────────────────────────── */
+
+	// Provider section visibility toggle
+	( function () {
+		var select = document.getElementById( 'seopilot_provider' );
+		if ( ! select ) return;
+
+		function applyVisibility() {
+			var provider = select.value;
+			document.querySelectorAll( '.seopilot-provider-section' ).forEach( function ( row ) {
+				row.style.display = row.classList.contains( 'seopilot-provider--' + provider ) ? '' : 'none';
+			} );
+		}
+
+		select.addEventListener( 'change', applyVisibility );
+		applyVisibility();
+	} )();
+
+	// Reset system prompt to plugin default
+	( function () {
+		var btn = document.getElementById( 'seopilot-reset-prompt-btn' );
+		if ( ! btn ) return;
+		btn.addEventListener( 'click', function () {
+			if ( ! window.confirm( SeoPilot.strings.reset_prompt_confirm ) ) {
+				return;
+			}
+			if ( SeoPilot.default_system_prompt ) {
+				document.getElementById( 'seopilot_system_prompt' ).value = SeoPilot.default_system_prompt;
+			}
+		} );
+	} )();
+
 } )( jQuery );

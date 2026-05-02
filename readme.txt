@@ -1,5 +1,5 @@
 === Faye SEO Pilot ===
-Contributors: rexbengil
+Contributors: centraleffects
 Tags: seo, ai, content, meta-description, openai
 Requires at least: 6.3
 Tested up to: 6.9
@@ -66,6 +66,28 @@ Yes. API keys are encrypted using libsodium before being stored in the database.
 2. Content Queue — list posts and pages, run audits.
 3. Review screen — side-by-side comparison with field-level approval.
 4. Audit History — view past jobs and roll back applied changes.
+
+== External Services ==
+
+This plugin connects to third-party AI APIs to analyse your post content and generate SEO suggestions. No requests are made without an administrator explicitly triggering an audit.
+
+= Anthropic Claude =
+
+Used when the Anthropic Claude provider is selected in Settings.
+
+* **What is sent:** post title, body content, meta fields (title, description, excerpt), and the configured system prompt.
+* **When it is sent:** only when an administrator clicks "Audit" on a post or page, or runs a bulk audit.
+* **Provider:** Anthropic, PBC
+* [Terms of Service](https://www.anthropic.com/legal/aup) | [Privacy Policy](https://www.anthropic.com/legal/privacy)
+
+= OpenAI =
+
+Used when the OpenAI provider is selected in Settings.
+
+* **What is sent:** post title, body content, meta fields (title, description, excerpt), and the configured system prompt.
+* **When it is sent:** only when an administrator clicks "Audit" on a post or page, or runs a bulk audit.
+* **Provider:** OpenAI, LLC
+* [Terms of Service](https://openai.com/policies/terms-of-use) | [Privacy Policy](https://openai.com/policies/privacy-policy)
 
 == Changelog ==
 

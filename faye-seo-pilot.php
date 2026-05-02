@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Faye SEO Pilot
- * Plugin URI:        https://github.com/centraleffects/faye-seo-pilot
+ * Plugin URI:        https://github.com/itsrexb/faye-seo-pilot
  * Description:       Audits WordPress posts and pages using AI, then proposes SEO-optimised titles, meta descriptions, and rewritten body content. Every suggestion is reviewed and approved field-by-field before any change is saved.
  * Version:           1.0.0
  * Requires at least: 6.3
