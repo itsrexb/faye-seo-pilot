@@ -36,8 +36,8 @@ final class ReviewPage {
 	public function register(): void {
 		$this->hook = add_submenu_page(
 			'faye-seo-pilot-settings',
-			__( 'Review Proposal', 'faye-seo-pilot' ),
-			__( 'Review', 'faye-seo-pilot' ),
+			__( 'Review Proposal', 'seo-pilot-pro-to-faye-seo-pilot' ),
+			__( 'Review', 'seo-pilot-pro-to-faye-seo-pilot' ),
 			'edit_posts',
 			'faye-seo-pilot-review',
 			[ $this, 'render' ]
@@ -50,7 +50,7 @@ final class ReviewPage {
 
 	public function render(): void {
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions.', 'faye-seo-pilot' ) );
+			wp_die( esc_html__( 'Insufficient permissions.', 'seo-pilot-pro-to-faye-seo-pilot' ) );
 		}
 
 		$job_id = absint( $_GET['job_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only, no state change
@@ -70,13 +70,13 @@ final class ReviewPage {
 		$logs      = $this->log_repo->find_by_job( $job_id );
 
 		$field_labels = [
-			'post_title'       => __( 'Post Title', 'faye-seo-pilot' ),
-			'seo_title'        => __( 'SEO Title (meta title)', 'faye-seo-pilot' ),
-			'meta_description' => __( 'Meta Description', 'faye-seo-pilot' ),
-			'post_excerpt'     => __( 'Excerpt', 'faye-seo-pilot' ),
-			'post_content'     => __( 'Body Content', 'faye-seo-pilot' ),
-			'post_categories'  => __( 'Categories', 'faye-seo-pilot' ),
-			'post_tags'        => __( 'Tags', 'faye-seo-pilot' ),
+			'post_title'       => __( 'Post Title', 'seo-pilot-pro-to-faye-seo-pilot' ),
+			'seo_title'        => __( 'SEO Title (meta title)', 'seo-pilot-pro-to-faye-seo-pilot' ),
+			'meta_description' => __( 'Meta Description', 'seo-pilot-pro-to-faye-seo-pilot' ),
+			'post_excerpt'     => __( 'Excerpt', 'seo-pilot-pro-to-faye-seo-pilot' ),
+			'post_content'     => __( 'Body Content', 'seo-pilot-pro-to-faye-seo-pilot' ),
+			'post_categories'  => __( 'Categories', 'seo-pilot-pro-to-faye-seo-pilot' ),
+			'post_tags'        => __( 'Tags', 'seo-pilot-pro-to-faye-seo-pilot' ),
 		];
 
 		// Extract issues, word count, link count, and CTA count from log.
@@ -101,7 +101,7 @@ final class ReviewPage {
 		?>
 		<div class="wrap seopilot-wrap">
 			<h1>
-				<?php esc_html_e( 'Review Proposal', 'faye-seo-pilot' ); ?>
+				<?php esc_html_e( 'Review Proposal', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 				<span class="seopilot-badge seopilot-badge--<?php echo esc_attr( $job->status ); ?>"><?php echo esc_html( $job->status ); ?></span>
 			</h1>
 
@@ -110,9 +110,9 @@ final class ReviewPage {
 					<?php
 					printf(
 						/* translators: 1: post title, 2: post edit link */
-						esc_html__( 'Post: %1$s — %2$s', 'faye-seo-pilot' ),
+						esc_html__( 'Post: %1$s — %2$s', 'seo-pilot-pro-to-faye-seo-pilot' ),
 						'<strong>' . esc_html( $post->post_title ) . '</strong>',
-						'<a href="' . esc_url( (string) get_edit_post_link( $post->ID ) ) . '">' . esc_html__( 'Edit post', 'faye-seo-pilot' ) . '</a>'
+						'<a href="' . esc_url( (string) get_edit_post_link( $post->ID ) ) . '">' . esc_html__( 'Edit post', 'seo-pilot-pro-to-faye-seo-pilot' ) . '</a>'
 					);
 					?>
 				</p>
@@ -122,21 +122,21 @@ final class ReviewPage {
 				<p class="seopilot-audit-stats">
 					<?php if ( $enhanced_words > 0 ) : ?>
 						<span class="seopilot-badge <?php echo $enhanced_words >= 800 ? 'seopilot-badge--ok' : 'seopilot-badge--warn'; ?>">
-							<?php echo esc_html( number_format_i18n( $enhanced_words ) ); ?> <?php esc_html_e( 'words', 'faye-seo-pilot' ); ?>
+							<?php echo esc_html( number_format_i18n( $enhanced_words ) ); ?> <?php esc_html_e( 'words', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 						</span>
 					<?php endif; ?>
 					<?php if ( $links_inserted > 0 ) : ?>
 						<span class="seopilot-badge seopilot-badge--audited">
-							<?php echo esc_html( $links_inserted ); ?> <?php esc_html_e( 'internal links', 'faye-seo-pilot' ); ?>
+							<?php echo esc_html( $links_inserted ); ?> <?php esc_html_e( 'internal links', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 						</span>
 					<?php endif; ?>
 					<?php if ( $ctas_detected > 0 ) : ?>
 						<span class="seopilot-badge seopilot-badge--ok">
-							<?php echo esc_html( $ctas_detected ); ?> <?php esc_html_e( 'CTA(s) preserved', 'faye-seo-pilot' ); ?>
+							<?php echo esc_html( $ctas_detected ); ?> <?php esc_html_e( 'CTA(s) preserved', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 						</span>
 					<?php elseif ( $enhanced_words > 0 ) : ?>
 						<span class="seopilot-badge seopilot-badge--warn">
-							<?php esc_html_e( 'No CTAs detected', 'faye-seo-pilot' ); ?>
+							<?php esc_html_e( 'No CTAs detected', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 						</span>
 					<?php endif; ?>
 				</p>
@@ -144,7 +144,7 @@ final class ReviewPage {
 
 			<?php if ( ! empty( $issues ) ) : ?>
 				<div class="seopilot-issues-box">
-					<strong><?php esc_html_e( 'SEO Issues Found:', 'faye-seo-pilot' ); ?></strong>
+					<strong><?php esc_html_e( 'SEO Issues Found:', 'seo-pilot-pro-to-faye-seo-pilot' ); ?></strong>
 					<ul>
 						<?php foreach ( $issues as $issue ) : ?>
 							<li><?php echo esc_html( $issue ); ?></li>
@@ -171,9 +171,9 @@ final class ReviewPage {
 						// Detect accordion/FAQ by checking if the value is a JSON array of Q&A.
 						$decoded = json_decode( $orig, true );
 						if ( is_array( $decoded ) && isset( $decoded[0]['question'] ) ) {
-							$label = __( 'Accordion / FAQ Block', 'faye-seo-pilot' );
+							$label = __( 'Accordion / FAQ Block', 'seo-pilot-pro-to-faye-seo-pilot' );
 						} else {
-							$label = __( 'Content Block', 'faye-seo-pilot' );
+							$label = __( 'Content Block', 'seo-pilot-pro-to-faye-seo-pilot' );
 						}
 					} else {
 						$label = $field;
@@ -192,17 +192,17 @@ final class ReviewPage {
 							<h3><?php echo esc_html( $label ); ?></h3>
 							<div class="seopilot-field-actions">
 								<button type="button" class="button button-primary seopilot-accept-btn" data-field="<?php echo esc_attr( $field ); ?>">
-									&#10003; <?php esc_html_e( 'Accept', 'faye-seo-pilot' ); ?>
+									&#10003; <?php esc_html_e( 'Accept', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 								</button>
 								<button type="button" class="button seopilot-reject-btn" data-field="<?php echo esc_attr( $field ); ?>">
-									&#10007; <?php esc_html_e( 'Reject', 'faye-seo-pilot' ); ?>
+									&#10007; <?php esc_html_e( 'Reject', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 								</button>
 							</div>
 						</div>
 
 						<div class="seopilot-field-body">
 							<div class="seopilot-col seopilot-col--current">
-								<h4><?php esc_html_e( 'Current', 'faye-seo-pilot' ); ?></h4>
+								<h4><?php esc_html_e( 'Current', 'seo-pilot-pro-to-faye-seo-pilot' ); ?></h4>
 								<div class="seopilot-content-box">
 									<?php
 									if ( $is_json ) {
@@ -211,19 +211,19 @@ final class ReviewPage {
 												echo '<p><strong>' . esc_html( $qa['question'] ?? '' ) . '</strong><br>' . esc_html( $qa['answer'] ?? '' ) . '</p>';
 											}
 										} else {
-											echo esc_html( $orig ?: __( '(empty)', 'faye-seo-pilot' ) );
+											echo esc_html( $orig ?: __( '(empty)', 'seo-pilot-pro-to-faye-seo-pilot' ) );
 										}
 									} elseif ( $is_html ) {
 										echo wp_kses_post( $orig );
 									} else {
-										echo esc_html( $orig ?: __( '(empty)', 'faye-seo-pilot' ) );
+										echo esc_html( $orig ?: __( '(empty)', 'seo-pilot-pro-to-faye-seo-pilot' ) );
 									}
 									?>
 								</div>
 							</div>
 
 							<div class="seopilot-col seopilot-col--suggested">
-								<h4><?php esc_html_e( 'Suggested', 'faye-seo-pilot' ); ?></h4>
+								<h4><?php esc_html_e( 'Suggested', 'seo-pilot-pro-to-faye-seo-pilot' ); ?></h4>
 								<?php if ( $is_json ) : ?>
 									<?php
 									$sugg_items = json_decode( $sugg, true );
@@ -250,20 +250,20 @@ final class ReviewPage {
 
 				<div class="seopilot-submit-bar">
 					<button type="button" id="seopilot-accept-all-btn" class="button button-large">
-						&#10003;<?php esc_html_e( 'Accept All', 'faye-seo-pilot' ); ?>
+						&#10003;<?php esc_html_e( 'Accept All', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 					</button>
 					<button type="button" id="seopilot-apply-btn" class="button button-primary button-large">
-						<?php esc_html_e( 'Apply Approved Fields', 'faye-seo-pilot' ); ?>
+						<?php esc_html_e( 'Apply Approved Fields', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 					</button>
 					<button type="button" id="seopilot-reaudit-btn" class="button button-large" data-post-id="<?php echo esc_attr( (string) $job->post_id ); ?>">
-						&#8635; <?php esc_html_e( 'Re-audit', 'faye-seo-pilot' ); ?>
+						&#8635; <?php esc_html_e( 'Re-audit', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 					</button>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=faye-seo-pilot-queue' ) ); ?>" class="button">
-						<?php esc_html_e( '&larr; Back to Queue', 'faye-seo-pilot' ); ?>
+						<?php esc_html_e( '&larr; Back to Queue', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 					</a>
 					<?php if ( $job->status === 'applied' ) : ?>
 						<button type="button" id="seopilot-rollback-btn" class="button seopilot-rollback-btn" data-job-id="<?php echo esc_attr( (string) $job_id ); ?>">
-							<?php esc_html_e( 'Roll Back Changes', 'faye-seo-pilot' ); ?>
+							<?php esc_html_e( 'Roll Back Changes', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 						</button>
 					<?php endif; ?>
 				</div>
@@ -275,10 +275,10 @@ final class ReviewPage {
 	private function render_no_job(): void {
 		?>
 		<div class="wrap seopilot-wrap">
-			<h1><?php esc_html_e( 'Review Proposal', 'faye-seo-pilot' ); ?></h1>
-			<p><?php esc_html_e( 'No proposal selected. Go to the Content Queue and run an audit first.', 'faye-seo-pilot' ); ?></p>
+			<h1><?php esc_html_e( 'Review Proposal', 'seo-pilot-pro-to-faye-seo-pilot' ); ?></h1>
+			<p><?php esc_html_e( 'No proposal selected. Go to the Content Queue and run an audit first.', 'seo-pilot-pro-to-faye-seo-pilot' ); ?></p>
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=faye-seo-pilot-queue' ) ); ?>" class="button">
-				<?php esc_html_e( '&larr; Content Queue', 'faye-seo-pilot' ); ?>
+				<?php esc_html_e( '&larr; Content Queue', 'seo-pilot-pro-to-faye-seo-pilot' ); ?>
 			</a>
 		</div>
 		<?php

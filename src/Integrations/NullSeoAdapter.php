@@ -33,6 +33,6 @@ final class NullSeoAdapter implements SeoAdapterInterface {
 	}
 
 	public function name(): string {
-		return __( 'None (no SEO plugin detected)', 'faye-seo-pilot' );
+		return __( 'None (no SEO plugin detected)', 'seo-pilot-pro-to-faye-seo-pilot' );
 	}
 }

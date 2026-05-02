@@ -34,11 +34,11 @@ final class ContentExtractor {
 		$post = get_post( $post_id );
 
 		if ( ! $post instanceof \WP_Post ) {
-			return new \WP_Error( 'seopilot_invalid_post', __( 'Post not found.', 'faye-seo-pilot' ) );
+			return new \WP_Error( 'seopilot_invalid_post', __( 'Post not found.', 'seo-pilot-pro-to-faye-seo-pilot' ) );
 		}
 
 		if ( ! in_array( $post->post_status, [ 'publish', 'draft', 'pending', 'private' ], true ) ) {
-			return new \WP_Error( 'seopilot_invalid_status', __( 'Post status is not auditable.', 'faye-seo-pilot' ) );
+			return new \WP_Error( 'seopilot_invalid_status', __( 'Post status is not auditable.', 'seo-pilot-pro-to-faye-seo-pilot' ) );
 		}
 
 		$settings    = get_option( 'seopilot_settings', [] );

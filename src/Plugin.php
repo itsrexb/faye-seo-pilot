@@ -102,23 +102,23 @@ final class Plugin {
 				'nonce'                 => wp_create_nonce( 'seopilot_nonce' ),
 				'default_system_prompt' => RequestFactory::get_default_system_prompt(),
 				'strings'               => [
-					'auditing'      => __( 'Auditing…', 'faye-seo-pilot' ),
-					'audit_done'    => __( 'Audit complete. Redirecting to review…', 'faye-seo-pilot' ),
-					'audit_failed'  => __( 'Audit failed: ', 'faye-seo-pilot' ),
-					'applying'      => __( 'Applying approved changes…', 'faye-seo-pilot' ),
-					'apply_done'    => __( 'Changes applied.', 'faye-seo-pilot' ),
-					'apply_failed'  => __( 'Apply failed: ', 'faye-seo-pilot' ),
-					'rolling_back'  => __( 'Rolling back…', 'faye-seo-pilot' ),
-					'rollback_done' => __( 'Rollback complete.', 'faye-seo-pilot' ),
-					'reauditing'           => __( 'Re-auditing…', 'faye-seo-pilot' ),
-					'reset_prompt_confirm' => __( 'Reset to the plugin default prompt?', 'faye-seo-pilot' ),
+					'auditing'      => __( 'Auditing…', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'audit_done'    => __( 'Audit complete. Redirecting to review…', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'audit_failed'  => __( 'Audit failed: ', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'applying'      => __( 'Applying approved changes…', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'apply_done'    => __( 'Changes applied.', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'apply_failed'  => __( 'Apply failed: ', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'rolling_back'  => __( 'Rolling back…', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'rollback_done' => __( 'Rollback complete.', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'reauditing'           => __( 'Re-auditing…', 'seo-pilot-pro-to-faye-seo-pilot' ),
+					'reset_prompt_confirm' => __( 'Reset to the plugin default prompt?', 'seo-pilot-pro-to-faye-seo-pilot' ),
 				],
 			] );
 		} );
 
 		add_filter( 'plugin_action_links_' . SEOPILOT_PLUGIN_BASENAME, function ( array $links ): array {
 			$url     = admin_url( 'admin.php?page=faye-seo-pilot-settings' );
-			$links[] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'faye-seo-pilot' ) . '</a>';
+			$links[] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'seo-pilot-pro-to-faye-seo-pilot' ) . '</a>';
 			return $links;
 		} );
 	}
@@ -130,12 +130,12 @@ final class Plugin {
 		check_ajax_referer( 'seopilot_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'faye-seo-pilot' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'seo-pilot-pro-to-faye-seo-pilot' ) ], 403 );
 		}
 
 		$post_id = absint( $_POST['post_id'] ?? 0 );
 		if ( ! $post_id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid post ID.', 'faye-seo-pilot' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid post ID.', 'seo-pilot-pro-to-faye-seo-pilot' ) ] );
 		}
 
 		$seo_adapter = $this->resolve_seo_adapter();
@@ -165,14 +165,14 @@ final class Plugin {
 		check_ajax_referer( 'seopilot_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'faye-seo-pilot' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'seo-pilot-pro-to-faye-seo-pilot' ) ], 403 );
 		}
 
 		$job_id    = absint( $_POST['job_id'] ?? 0 );
 		$approvals = isset( $_POST['approvals'] ) ? wp_unslash( $_POST['approvals'] ) : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per-field below
 
 		if ( ! $job_id || ! is_array( $approvals ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'faye-seo-pilot' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'seo-pilot-pro-to-faye-seo-pilot' ) ] );
 		}
 
 		$seo_adapter = $this->resolve_seo_adapter();
@@ -183,7 +183,7 @@ final class Plugin {
 
 		$job = $job_repo->find( $job_id );
 		if ( ! $job ) {
-			wp_send_json_error( [ 'message' => __( 'Job not found.', 'faye-seo-pilot' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Job not found.', 'seo-pilot-pro-to-faye-seo-pilot' ) ] );
 		}
 
 		$post_id = (int) $job->post_id;
@@ -268,7 +268,7 @@ final class Plugin {
 		) );
 
 		wp_send_json_success( [
-			'message'     => __( 'Changes applied successfully.', 'faye-seo-pilot' ),
+			'message'     => __( 'Changes applied successfully.', 'seo-pilot-pro-to-faye-seo-pilot' ),
 			'history_url' => admin_url( 'admin.php?page=faye-seo-pilot-history' ),
 		] );
 	}
@@ -280,12 +280,12 @@ final class Plugin {
 		check_ajax_referer( 'seopilot_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'faye-seo-pilot' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Insufficient permissions.', 'seo-pilot-pro-to-faye-seo-pilot' ) ], 403 );
 		}
 
 		$job_id = absint( $_POST['job_id'] ?? 0 );
 		if ( ! $job_id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid job ID.', 'faye-seo-pilot' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid job ID.', 'seo-pilot-pro-to-faye-seo-pilot' ) ] );
 		}
 
 		$seo_adapter = $this->resolve_seo_adapter();
@@ -302,7 +302,7 @@ final class Plugin {
 		$job_repo->update_status( $job_id, 'rolled_back' );
 		$log_repo->add( $job_id, 'info', 'Rolled back by user ' . get_current_user_id() );
 
-		wp_send_json_success( [ 'message' => __( 'Rollback complete.', 'faye-seo-pilot' ) ] );
+		wp_send_json_success( [ 'message' => __( 'Rollback complete.', 'seo-pilot-pro-to-faye-seo-pilot' ) ] );
 	}
 
 	// -------------------------------------------------------------------------
