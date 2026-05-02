@@ -38,7 +38,7 @@ final class ResponseParser {
 		if ( null === $json ) {
 			return new \WP_Error(
 				'seopilot_parse_error',
-				__( 'Claude returned a response that could not be parsed as JSON.', 'seo-pilot-pro-to-faye-seo-pilot' )
+				__( 'Claude returned a response that could not be parsed as JSON.', 'faye-seo-pilot' )
 			);
 		}
 
@@ -47,7 +47,7 @@ final class ResponseParser {
 		if ( ! is_array( $data ) ) {
 			return new \WP_Error(
 				'seopilot_parse_error',
-				__( 'Claude response JSON could not be decoded.', 'seo-pilot-pro-to-faye-seo-pilot' )
+				__( 'Claude response JSON could not be decoded.', 'faye-seo-pilot' )
 			);
 		}
 
@@ -57,7 +57,7 @@ final class ResponseParser {
 					'seopilot_parse_error',
 					sprintf(
 						/* translators: %s: missing JSON key */
-						__( 'Claude response is missing required key: %s', 'seo-pilot-pro-to-faye-seo-pilot' ),
+						__( 'Claude response is missing required key: %s', 'faye-seo-pilot' ),
 						$key
 					)
 				);
